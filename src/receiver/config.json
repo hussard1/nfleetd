@@ -1,0 +1,20 @@
+{
+  "gpsDevice1": {
+    "status" : true,
+    "protocol" : "tcp",
+    "address": "127.0.0.1",
+    "port": 8000,
+    "regex": "(?P<name>\\w+\\s:\\s\\d)",
+    "goRoutine" : 5,
+    "buffer" : 4096
+  },
+  "gpsDevice2": {
+    "status" : true,
+    "protocol" : "tcp",
+    "address": "127.0.0.1",
+    "port": 8001,
+    "regex": "(?P<name>\\w+\\s:\\s\\d)",
+    "goRoutine" : 5,
+    "buffer" : 4096
+  }
+}
