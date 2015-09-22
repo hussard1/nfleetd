@@ -1,88 +1,151 @@
 package main
 
 import(
-	"fmt"
+//	"fmt"
 	"runtime"
 	"net"
 	"sync"
 	"regexp"
 	"github.com/spf13/viper"
 	"strconv"
+	log "github.com/cihub/seelog"
+	"os"
+	"encoding/hex"
+	"gopkg.in/mgo.v2"
+	"time"
+
 )
 
-// 데이터를 슬라이스에 넣을 때는 성능향상을 위해 pool을 이용하는 것을 검토해본다.
+const (
+	//config file name
+	cofingfile = "deviceInfo"
+	//config file path
+	configpath = "\\resource\\config\\"
+	//log config file name
+	logconfigfile = "seelog.xml"
+)
 
-// 슬라이스에서 가져온 데이터를 차례대로 파싱하기 위한 함수를 만들어야 한다.
-// 1. 데이터 인코딩 2. 정규표현식으로 파싱 3. key, value 형태로 맵에 저장(pool) 이용
-// 파싱을 하기 위해서는 정규표현식을 이용하며, 정규표현식은 config에서 가져온다.
-// 정규표현식으로 데이터를 Key, value 형태로 분리하고, 데이터 베이스에 저장한다.
-// key,value로 쪼개진 데이터를 mongo db에 써줘야하는데, 이때 mysql도 고려한다.
 
-// 고려사항
-// CPU 수도 고려
-//
+type DeviceInfo struct{
+	name string
+	status bool
+	protocol string
+	port int
+	regex string
+	threadCnt int
+	buffer int
+}
 
-const configfilename = "config"
-const configpath = "D:\\godev\\nfleetd\\src\\receiver\\."
+type Database struct{
+	session *mgo.Session
+}
+
 
 func main() {
+	//prevent to stop main goroutine
+	done := make(chan struct{})
+	defer close(done)
+
 	//use all CPU core
 	numCPUs := runtime.NumCPU()
 	runtime.GOMAXPROCS(numCPUs)
 
-	//read Configuration file
-	viper.SetConfigName(configfilename) // name of config file (without extension)
-	viper.AddConfigPath(configpath)      // path to look for the config file in
+	//init logger
+	initLogger()
+	defer log.Flush()
 
-	err := viper.ReadInConfig()
+	//init Database
+	database := new(Database)
+	database.session = InitMongoDB()
 
-	result := make(chan string)
+	//get config
+	err := getDeviceInfoFile()
 
-	if err != nil {
-		fmt.Println("Config not found... ", err)
-	} else {
-		for _, name := range viper.AllKeys(){
-
-			//config default setting
-			//viper.SetDefault(name, )
-			//Routine call
-			status := viper.GetBool(name+".status")
-			protocol := viper.GetString(name+".protocol")
-			address := viper.GetString(name+".address")
-			port := viper.GetInt(name+".port")
-			regex := viper.GetString(name+".regex")
-			goRoutine := viper.GetInt(name+".goRoutine")
-			buffer := viper.GetInt(name+".buffer")
-			if status == true{
-				fmt.Println("start to receive data : name="+name+" IP="+address+" port="+strconv.Itoa(port))
-				go startReciever(name, protocol, address, port, regex, goRoutine, buffer, result)
+	if err != nil{
+		return
+	}else{
+		for _, name := range viper.AllKeys() {
+			deviceInfo := new(DeviceInfo)
+			deviceInfo.initDevice(name)
+			if deviceInfo.status == true {
+				go func(){
+					startReciever(deviceInfo, database)
+				}()
 			}
 		}
-		for r := range result{
-			fmt.Println(r)
+	}
+
+	for _ = range done{
+		select{
+			case <-done :
+				return
 		}
-		defer close(result)
 	}
 }
 
-func startReciever (name string, protocol string, address string, port int, regex string, goRoutine int, buffer int, result chan string) {
-	ln, err := net.Listen(protocol, address + ":" + strconv.Itoa(port))
+func initLogger(){
+	path, err := os.Getwd()
 	if err != nil{
-		fmt.Println(err)
+		return
+	}
+	logger, err := log.LoggerFromConfigAsFile(path + configpath + logconfigfile)
+	if err != nil{
+		logger.Info("Log Config file error : ", err)
+		return
+	}
+	log.ReplaceLogger(logger)
+	log.Info("Get config file : " + path + configpath + logconfigfile)
+}
+
+func getDeviceInfoFile() error{
+
+	path, err := os.Getwd()
+	if err != nil{
+		log.Info("Config file error : ", err)
+	}
+	//read Configuration file
+	viper.SetConfigName(cofingfile) // name of config file (without extension)
+	viper.AddConfigPath(path + configpath)      // path to look for the config file in
+
+	err = viper.ReadInConfig()
+	if err != nil {
+		log.Info("Config file error : ", err)
+	}
+	log.Info("Get config file : " + path + configpath + cofingfile)
+	return err
+}
+
+func (deviceInfo *DeviceInfo) initDevice(name string){
+	deviceInfo.name = name
+	deviceInfo.status = viper.GetBool(name+".status")
+	deviceInfo.protocol = viper.GetString(name+".protocol")
+	deviceInfo.port = viper.GetInt(name+".port")
+	deviceInfo.regex = viper.GetString(name+".regex")
+	deviceInfo.threadCnt = viper.GetInt(name+".threadCnt")
+	deviceInfo.buffer = viper.GetInt(name+".buffer")
+}
+
+
+func startReciever(deviceInfo *DeviceInfo, database *Database) {
+
+	log.Info("start to receive data : name=" + deviceInfo.name + " port=" + strconv.Itoa(deviceInfo.port))
+
+	ln, err := net.Listen(deviceInfo.protocol, ":" + strconv.Itoa(deviceInfo.port))
+	if err != nil{
+		log.Critical(err)
 		return
 	}
 	defer ln.Close()
 
-	ch := make(chan string)
-	done := make(chan struct{})
+	ch := make(chan []byte)
 
 	var wg sync.WaitGroup
-	const numWorkers = 3
+	numWorkers := deviceInfo.threadCnt
 	wg.Add(numWorkers)
 
 	for i:=0; i< numWorkers; i++{
 		go func(n int) {
-			worker(n, done, ch, result)
+			worker(n, ch, deviceInfo, database)
 			wg.Done()
 		}(i)
 	}
@@ -94,7 +157,7 @@ func startReciever (name string, protocol string, address string, port int, rege
 	for {
 		conn, err := ln.Accept()
 		if err != nil {
-			fmt.Println(err)
+			log.Info(err)
 			continue
 		}
 		defer conn.Close()
@@ -104,28 +167,23 @@ func startReciever (name string, protocol string, address string, port int, rege
 			for {
 				n, err := c.Read(data)
 				if err != nil {
-					fmt.Println(err)
+					log.Critical(err)
 					return
 				}
-				ch <- string(data[:n])
+				ch <- data[:n]
 			}
 		}(conn)
 	}
-
-	defer close(done)
 	defer close(ch)
-
 }
 
-func worker(n int, done <-chan struct{}, ch<-chan string, result chan <- string){
-	a := make(map[string]string)
+func worker(n int, ch<-chan []byte, deviceInfo *DeviceInfo, database *Database){
+	pData := make(map[string]string)
 	for rawData := range ch{
 		select{
-		case <-done:
-			return
-		default :
-			a = parseData(rawData);
-			result <- fmt.Sprintf("worker: %d, bbb : %+v", n, a)
+			default :
+			pData = parseDataRegex(hex.EncodeToString(rawData), deviceInfo.regex);
+			InsertMapToMongoDB(5, pData, database.session)
 		}
 	}
 }
@@ -134,9 +192,9 @@ type myRegexp struct {
 	*regexp.Regexp
 }
 
-func parseData(rawData string) map[string]string{
+func parseDataRegex(rawData string, regex string) map[string]string{
 	s1 := make(map[string]string)
-	re1 := myRegexp{regexp.MustCompile("(?P<name>\\w+\\s:\\s\\d)")};
+	re1 := myRegexp{regexp.MustCompile(regex)}
 	s1 = re1.FindStringSubmatchMap(rawData)
 	return s1
 }
@@ -157,4 +215,64 @@ func (r *myRegexp) FindStringSubmatchMap(s string) map[string]string{
 		captures[name] = match[i]
 	}
 	return captures
+}
+
+const (
+	MongoDBHosts = "www.motrexlab.net:27017"
+	AuthDatabase = "seobaksa"
+//	AuthUserName = "guest"
+//	AuthPassword = "welcome"
+//	TestDatabase = "goinggo"
+)
+
+// main is the entry point for the application.
+func InitMongoDB() *mgo.Session{
+	// We need this object to establish a session to our MongoDB.
+	mongoDBDialInfo := &mgo.DialInfo{
+		Addrs:    []string{MongoDBHosts},
+		Timeout:  60 * time.Second,
+		Database: AuthDatabase,
+//		Username: AuthUserName,
+//		Password: AuthPassword,
+	}
+
+	// Create a session which maintains a pool of socket connections
+	// to our MongoDB.
+	mongoSession, err := mgo.DialWithInfo(mongoDBDialInfo)
+	if err != nil {
+		log.Critical("CreateSession: %s\n", err)
+	}
+
+	// Reads may not be entirely up-to-date, but they will always see the
+	// history of changes moving forward, the data read will be consistent
+	// across sequential queries in the same session, and modifications made
+	// within the session will be observed in following queries (read-your-writes).
+	// http://godoc.org/labix.org/v2/mgo#Session.SetMode
+	mongoSession.SetMode(mgo.Monotonic, true)
+
+	return mongoSession
+}
+
+func InsertMapToMongoDB(threadCnt int, data map[string]string, session *mgo.Session){
+
+//	var waitGroup sync.WaitGroup
+//
+//	 Perform 5 concurrent queries against the database.
+//	waitGroup.Add(threadCnt)
+
+//	for i := 0; i < threadCnt; i++{
+		go func(){
+			c := session.DB("test").C("gpsDeviceInfo")
+			if len(data) != 0 {
+				err := c.Insert(data)
+				if err != nil {
+					log.Critical(err)
+				}
+			}
+//			defer waitGroup.Done()
+		}()
+//	}
+//	go func() {
+//		waitGroup.Wait()
+//	}()
 }
