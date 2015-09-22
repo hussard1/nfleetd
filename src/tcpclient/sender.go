@@ -65,7 +65,7 @@ func startSender(n int, pool sync.Pool){
 		gpsData.buffer[13] = byte(rand.Intn(256))
 		gpsData.buffer[14] = byte(rand.Intn(256))
 
-		time.Sleep(1 * time.Second)
+		time.Sleep(1 * time.Millisecond)
 		gpsData.tag = "used"
 		pool.Put(gpsData)
 	}
