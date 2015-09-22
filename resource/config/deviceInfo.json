@@ -1,0 +1,18 @@
+{
+  "gpsDevice1": {
+    "status" : true,
+    "protocol" : "tcp",
+    "port": 8000,
+    "regex": "^(?P<startbyte>\\w{4})(?P<packetlength>\\w{2})(?P<protocolnum>\\w{2})(?P<datetime>\\w{12})(?P<satellitenum>\\w{2})(?P<latitude>\\w{8})(?P<longtitude>\\w{8})(?P<speed>\\w{2})(?P<direction>\\w{4})(?P<remainbyte>\\w{4})(?P<serialnum>\\w{4})(?P<checksum>\\w{4})(?P<stopbyte>\\w{4})",
+    "threadCnt" : 5,
+    "buffer" : 4096
+  },
+  "gpsDevice2": {
+    "status" : true,
+    "protocol" : "tcp",
+    "port": 8001,
+    "regex": "^(?P<startbyte>\\w{4})(?P<packetlength>\\w{2})(?P<protocolnum>\\w{2})(?P<datetime>\\w{12})(?P<satellitenum>\\w{2})(?P<latitude>\\w{8})(?P<longtitude>\\w{8})(?P<speed>\\w{2})(?P<direction>\\w{4})(?P<remainbyte>\\w{4})(?P<serialnum>\\w{4})(?P<checksum>\\w{4})(?P<stopbyte>\\w{4})",
+    "threadCnt" : 5,
+    "buffer" : 4096
+  }
+}
