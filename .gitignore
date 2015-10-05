@@ -1,30 +1,41 @@
+# Go language specific
+bin/*
+pkg/*
+src/github.com
+
+# Runtime
+log/*
+logs/*
+*.log
+
+# IDE specific
 .idea
-**/*.db
-**/*.pyc
-logs/
-venv/
-htmlcov/
-cover/
-.coverage
-.vagrant
-*.pyproj
-*.sln
-*.suo
-nohup.out
 *.iml
-*.ipr
-*.iws
-*.bak
+
 .classpath
 .project
 .settings
-.svn
-.gradle
-.idea
 .metadata/
-.vagrant/
 Servers/
 META-INF/
 build/
 out/
-bin/
+
+*.pyproj
+*.sln
+*.suo
+*.iml
+*.ipr
+*.iws
+
+# Vagrant
+.vagrant/
+
+# Gradle
+.gradle
+
+# OS specific
+.DS_Store
+nohup.out
+*.bak
+
