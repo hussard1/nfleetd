@@ -1,0 +1,16 @@
+{
+  "devices": {
+    "goome-std": {
+      "enabled": true,
+      "protocol": "tcp",
+      "port": 6001,
+      "rule": "goome/std"
+    },
+    "cityeasy-std": {
+      "enabled": true,
+      "protocol": "tcp",
+      "port": 6002,
+      "rule": "cityeasy/std"
+    }
+  }
+}
