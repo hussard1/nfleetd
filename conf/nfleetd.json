@@ -1,14 +1,19 @@
 {
+  "worker": {
+    "thread": 5
+  },
   "devices": {
     "goome-std": {
       "enabled": true,
       "protocol": "tcp",
+      "address": "0.0.0.0",
       "port": 6001,
       "rule": "goome/std"
     },
     "cityeasy-std": {
       "enabled": true,
       "protocol": "tcp",
+      "address": "0.0.0.0",
       "port": 6002,
       "rule": "cityeasy/std"
     }

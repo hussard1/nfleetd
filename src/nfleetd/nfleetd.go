@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"runtime"
 )
 
 func commandLine() (configfile *string, logfile *string, loglevel *string) {
@@ -14,11 +15,29 @@ func commandLine() (configfile *string, logfile *string, loglevel *string) {
 	return
 }
 
-func bootup() {
+func bootup(worker *Worker, devices []Device) {
 	log.Info("Starting nfleetd server...")
+
+	server := new(Server)
+
+	for _, device := range devices {
+		if device.enabled == true {
+			go func(w Worker, d Device) {
+				server.Bind(w, d)
+			}(*worker, device)
+		}
+	}
 }
 
 func main() {
+	// prevent to stop main goroutine
+	done := make(chan struct {})
+	defer close(done)
+
+	// use all cores
+	numcpus := runtime.NumCPU()
+	runtime.GOMAXPROCS(numcpus)
+
 	configfile, logfile, loglevel := commandLine()
 
 	// Initialize logger
@@ -28,5 +47,12 @@ func main() {
 	conf := new(Configuration)
 	conf.Load(configfile)
 
-	bootup()
+	bootup(conf.getWorker(), conf.GetDevices())
+
+	for _ = range done {
+		select {
+		case <-done:
+			return
+		}
+	}
 }

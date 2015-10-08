@@ -9,6 +9,11 @@ import (
 	"strings"
 )
 
+const (
+	DEBUG = "debug"
+
+)
+
 var log = logrus.New()
 
 func InitLogger(logfile *string, loglevel *string) {
@@ -17,12 +22,17 @@ func InitLogger(logfile *string, loglevel *string) {
 		LogLevel: logrus.InfoLevel,
 	})
 
+	determineLevel(loglevel)
 	setOutput(logfile)
 }
 
 func determineLevel(loglevel *string) {
-	log.Level = logrus.DebugLevel
+	level, err := logrus.ParseLevel(strings.ToLower(*loglevel))
+	if err != nil {
+		return
+	}
 
+	log.Level = level
 }
 
 func setOutput(logfile *string) {
