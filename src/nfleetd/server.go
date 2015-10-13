@@ -3,6 +3,7 @@ import (
 	"fmt"
 	"net"
 	"sync"
+	"rule"
 )
 
 const (
@@ -64,6 +65,12 @@ func (server *Server) Bind(worker Worker, device Device) {
 }
 
 func execute(n int, ch<-chan []byte, device Device) {
+	_, err := rule.CreateRuleEngine(device.rule)
+	if err != nil {
+		log.Error("Couldn't create the rule engine", err)
+		return
+	}
+
 	data := make(map[string]string)
 	for raw := range ch {
 		fmt.Println(data, raw)
