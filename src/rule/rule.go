@@ -1,9 +1,7 @@
-package main
+package rule
 
 import (
 	"fmt"
-
-	"goome"
 )
 
 type RuleEngine interface {
@@ -28,7 +26,7 @@ func CreateRuleEngine(rule string) (RuleEngine, error) {
 
 	switch r {
 	case GOOME_STD:
-		return new(goome.GoomeStd), nil
+		return new(GoomeStd), nil
 	}
 
 	var re RuleEngine
