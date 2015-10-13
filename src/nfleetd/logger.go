@@ -3,7 +3,6 @@ package main
 import (
 	"os"
 	"fmt"
-
 	"github.com/Sirupsen/logrus"
 	"runtime"
 	"strings"

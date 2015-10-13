@@ -5,11 +5,23 @@ import (
 )
 
 type RuleEngine interface {
-	Parse()
+	Parse([]byte) *Message
 }
 
 type Message struct {
-
+	startByte string
+	packetLen string
+	protocolNum string
+	datetime string
+	satelliteNum string
+	latitude float64
+	longtitude float64
+	speed string
+	direction string
+	remainByte string
+	serialNum string
+	checksum string
+	stopByte string
 }
 
 type Rule uint8

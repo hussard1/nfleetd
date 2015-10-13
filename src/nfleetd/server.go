@@ -27,12 +27,18 @@ func (server *Server) Bind(worker Worker, device Device) {
 
 	ch := make(chan []byte)
 
+	re, err := rule.CreateRuleEngine(device.rule)
+	if err != nil {
+		log.Error("Couldn't create the rule engine", err)
+		return
+	}
+
 	var wg sync.WaitGroup
 	wg.Add(worker.thread)
 
 	for i := 0; i < worker.thread; i++ {
 		go func(n int) {
-			execute(n, ch, device)
+			execute(n, ch, device, re)
 			wg.Done()
 		}(i)
 	}
@@ -64,15 +70,11 @@ func (server *Server) Bind(worker Worker, device Device) {
 	defer close(ch)
 }
 
-func execute(n int, ch<-chan []byte, device Device) {
-	_, err := rule.CreateRuleEngine(device.rule)
-	if err != nil {
-		log.Error("Couldn't create the rule engine", err)
-		return
-	}
+func execute(n int, ch<-chan []byte, device Device, re rule.RuleEngine) {
 
-	data := make(map[string]string)
+//	data := make(map[string]string)
 	for raw := range ch {
-		fmt.Println(data, raw)
+		msg := re.Parse(raw)
+		fmt.Println(msg)
 	}
 }
