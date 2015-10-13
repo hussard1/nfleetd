@@ -14,8 +14,8 @@ type Message struct {
 	protocolNum string
 	datetime string
 	satelliteNum string
-	latitude float32
-	longtitude float32
+	latitude float64
+	longtitude float64
 	speed string
 	direction string
 	remainByte string

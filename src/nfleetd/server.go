@@ -74,7 +74,7 @@ func execute(n int, ch<-chan []byte, device Device, re rule.RuleEngine) {
 
 //	data := make(map[string]string)
 	for raw := range ch {
-		re.Parse(raw)
-		fmt.Println(re, raw)
+		msg := re.Parse(raw)
+		fmt.Println(msg)
 	}
 }

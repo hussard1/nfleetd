@@ -1,37 +1,55 @@
 package rule
 
-type GoomeStd struct {
+import (
+	"encoding/hex"
+	"strconv"
+)
 
+type GoomeStd struct {
 }
 
 func (re *GoomeStd) Parse(raw []byte) *Message{
 	msg := new(Message)
 	msg = parseData(raw, msg)
-	msg = calculate(msg)
+	msg = calculateData(msg)
 	return msg
 }
 
-func parseData(raw[]byte, msg Message) *Message{
-	msg.startByte = string(raw[0:1])
-	msg.packetLen = int(raw[2])
-	msg.protocolNum = string(raw[3])
-	msg.datetime = string(raw[4:9])
-	msg.satelliteNum = string(raw[10])
-	msg.latitude = float32(raw[11:14])
-	msg.longtitude = float32(raw[14:17])
-	msg.speed = string(raw[18])
-	msg.direction = string(raw[19:20])
-	msg.remainByte = string(raw[21:28])
-	msg.serialNum = string(raw[29:30])
-	msg.checksum = string(raw[31:32])
-	msg.stopByte = string(raw[33:34])
+func parseData(raw []byte, msg *Message) *Message{
+	data := hex.EncodeToString(raw)
+	msg.startByte = data[0:4]
+	msg.packetLen = data[4:6]
+	msg.protocolNum = data[6:8]
+	msg.datetime = data[8:20]
+	msg.satelliteNum = data[20:22]
+	latitude, _ := strconv.ParseInt(data[22:30], 16, 64)
+	msg.latitude = float64(latitude)
+	longtitude, _ := strconv.ParseInt(data[30:38], 16, 64)
+	msg.longtitude = float64(longtitude)
+	msg.speed = data[38:40]
+	msg.direction = data[40:44]
+	msg.remainByte = data[44:48]
+	msg.serialNum = data[48:52]
+	msg.checksum = data[52:56]
+	msg.stopByte = data[56:60]
 	return msg
 }
 
-func calculate(msg Message){
-	calculateLatitude(msg.latitude)
+func calculateData(msg *Message) *Message{
+	msg.latitude = calculateLatitude(msg.latitude)
+	msg.longtitude = calculateLongtitude(msg.longtitude)
+	return msg
 }
 
-func calculateLatitude(lat float32) float32{
-	return lat
+
+func calculateLatitude(lat float64) float64{
+	result1 := float64(int(lat/3))/10000
+	result2 := int(result1)/60
+	return float64(result2)+(result1 - float64(result2*60))/100
+}
+
+func calculateLongtitude(long float64) float64{
+	result1 := float64(int(long/3))/10000
+	result2 := int(result1)/60
+	return float64(result2)+(result1 - float64(result2*60))/100
 }
