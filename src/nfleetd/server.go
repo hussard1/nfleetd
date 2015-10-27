@@ -4,17 +4,18 @@ import (
 	"net"
 	"sync"
 	"rule"
+	"gopkg.in/mgo.v2"
 )
 
 const (
-	BUFFER = 4096
+	BUFFER = 40
 )
 
 type Server struct {
 
 }
 
-func (server *Server) Bind(worker Worker, device Device) {
+func (server *Server) Bind(worker Worker, device Device, collection *mgo.Collection) {
 	address := fmt.Sprintf("%s:%d", device.address, device.port)
 	log.Info(fmt.Sprintf("Bind name=%s, address=%s", device.name, address))
 
@@ -38,7 +39,7 @@ func (server *Server) Bind(worker Worker, device Device) {
 
 	for i := 0; i < worker.thread; i++ {
 		go func(n int) {
-			execute(n, ch, device, re)
+			execute(n, ch, device, re, collection)
 			wg.Done()
 		}(i)
 	}
@@ -70,11 +71,30 @@ func (server *Server) Bind(worker Worker, device Device) {
 	defer close(ch)
 }
 
-func execute(n int, ch<-chan []byte, device Device, re rule.RuleEngine) {
+func execute(n int, ch<-chan []byte, device Device, re rule.RuleEngine, collection *mgo.Collection) {
 
 //	data := make(map[string]string)
 	for raw := range ch {
 		msg := re.Parse(raw)
-		fmt.Println(msg)
+		InsertMapToMongoDB(msg, collection)
 	}
+}
+
+func InsertMapToMongoDB(msg *rule.Message, collection *mgo.Collection) {
+
+	//	var waitGroup sync.WaitGroup
+	//
+	//	 Perform 5 concurrent queries against the database.
+	//	waitGroup.Add(threadCnt)
+
+	//	for i := 0; i < threadCnt; i++{
+	go func() {
+		if msg != nil {
+			err := collection.Insert(msg)
+			fmt.Println(msg)
+			if err != nil {
+				log.Panic(err)
+			}
+		}
+	}()
 }

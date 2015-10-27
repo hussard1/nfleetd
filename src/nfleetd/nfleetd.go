@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"runtime"
+	"gopkg.in/mgo.v2"
 )
 
 func commandLine() (configfile *string, logfile *string, loglevel *string) {
@@ -15,16 +16,16 @@ func commandLine() (configfile *string, logfile *string, loglevel *string) {
 	return
 }
 
-func bootup(worker *Worker, devices []Device) {
+func bootup(worker *Worker, devices []Device, collection *mgo.Collection) {
 	log.Info("Starting nfleetd server...")
 
 	server := new(Server)
 
 	for _, device := range devices {
 		if device.enabled == true {
-			go func(w Worker, d Device) {
-				server.Bind(w, d)
-			}(*worker, device)
+			go func(w Worker, d Device, c *mgo.Collection) {
+				server.Bind(w, d, c)
+			}(*worker, device, collection)
 		}
 	}
 }
@@ -47,7 +48,10 @@ func main() {
 	conf := new(Configuration)
 	conf.Load(configfile)
 
-	bootup(conf.getWorker(), conf.GetDevices())
+	// Initialize mongoDB
+	collection := InitMongoDB();
+
+	bootup(conf.getWorker(), conf.GetDevices(), collection)
 
 	for _ = range done {
 		select {
