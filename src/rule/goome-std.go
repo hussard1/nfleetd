@@ -17,27 +17,27 @@ func (re *GoomeStd) Parse(raw []byte) *Message{
 
 func parseData(raw []byte, msg *Message) *Message{
 	data := hex.EncodeToString(raw)
-	msg.startByte = data[0:4]
-	msg.packetLen = data[4:6]
-	msg.protocolNum = data[6:8]
-	msg.datetime = data[8:20]
-	msg.satelliteNum = data[20:22]
+	msg.StartByte = data[0:4]
+	msg.PacketLen = data[4:6]
+	msg.ProtocolNum = data[6:8]
+	msg.Datetime = data[8:20]
+	msg.SatelliteNum = data[20:22]
 	latitude, _ := strconv.ParseInt(data[22:30], 16, 64)
-	msg.latitude = float64(latitude)
+	msg.Latitude = float64(latitude)
 	longtitude, _ := strconv.ParseInt(data[30:38], 16, 64)
-	msg.longtitude = float64(longtitude)
-	msg.speed = data[38:40]
-	msg.direction = data[40:44]
-	msg.remainByte = data[44:48]
-	msg.serialNum = data[48:52]
-	msg.checksum = data[52:56]
-	msg.stopByte = data[56:60]
+	msg.Longtitude = float64(longtitude)
+	msg.Speed = data[38:40]
+	msg.Direction = data[40:44]
+	msg.RemainByte = data[44:48]
+	msg.SerialNum = data[48:52]
+	msg.Checksum = data[52:56]
+	msg.StopByte = data[56:60]
 	return msg
 }
 
 func calculateData(msg *Message) *Message{
-	msg.latitude = calculateLatitude(msg.latitude)
-	msg.longtitude = calculateLongtitude(msg.longtitude)
+	msg.Latitude = calculateLatitude(msg.Latitude)
+	msg.Longtitude = calculateLongtitude(msg.Longtitude)
 	return msg
 }
 

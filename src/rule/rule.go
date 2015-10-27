@@ -9,19 +9,19 @@ type RuleEngine interface {
 }
 
 type Message struct {
-	startByte string
-	packetLen string
-	protocolNum string
-	datetime string
-	satelliteNum string
-	latitude float64
-	longtitude float64
-	speed string
-	direction string
-	remainByte string
-	serialNum string
-	checksum string
-	stopByte string
+	StartByte string
+	PacketLen string
+	ProtocolNum string
+	Datetime string
+	SatelliteNum string
+	Latitude float64
+	Longtitude float64
+	Speed string
+	Direction string
+	RemainByte string
+	SerialNum string
+	Checksum string
+	StopByte string
 }
 
 type Rule uint8
