@@ -16,15 +16,15 @@ func commandLine() (configfile *string, logfile *string, loglevel *string) {
 	return
 }
 
-func bootup(worker *Worker, devices []Device, collection *mgo.Collection) {
+func bootup(worker *Worker, devices []Device, collection *mgo.Session) {
 	log.Info("Starting nfleetd server...")
 
 	server := new(Server)
 
 	for _, device := range devices {
 		if device.enabled == true {
-			go func(w Worker, d Device, c *mgo.Collection) {
-				server.Bind(w, d, c)
+			go func(w Worker, d Device, s *mgo.Session) {
+				server.Bind(w, d, s)
 			}(*worker, device, collection)
 		}
 	}
@@ -49,9 +49,9 @@ func main() {
 	conf.Load(configfile)
 
 	// Initialize mongoDB
-	collection := InitMongoDB();
+	session := InitMongoDB();
 
-	bootup(conf.getWorker(), conf.GetDevices(), collection)
+	bootup(conf.getWorker(), conf.GetDevices(), session)
 
 	for _ = range done {
 		select {
