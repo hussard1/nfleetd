@@ -14,7 +14,7 @@ const (
 )
 
 
-func InitMongoDB() *mgo.Collection{
+func InitMongoDB() *mgo.Session{
 	// We need this object to establish a session to our MongoDB.
 	mongoDBDialInfo := &mgo.DialInfo{
 		Addrs:    []string{MongoDBHosts},
@@ -38,7 +38,5 @@ func InitMongoDB() *mgo.Collection{
 	// http://godoc.org/labix.org/v2/mgo#Session.SetMode
 	mongoSession.SetMode(mgo.Monotonic, true)
 
-	collection := mongoSession.DB("test").C("gpsDeviceInfo")
-
-	return collection
+	return mongoSession
 }

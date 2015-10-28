@@ -15,7 +15,7 @@ type Server struct {
 
 }
 
-func (server *Server) Bind(worker Worker, device Device, collection *mgo.Collection) {
+func (server *Server) Bind(worker Worker, device Device, session *mgo.Session) {
 	address := fmt.Sprintf("%s:%d", device.address, device.port)
 	log.Info(fmt.Sprintf("Bind name=%s, address=%s", device.name, address))
 
@@ -39,7 +39,7 @@ func (server *Server) Bind(worker Worker, device Device, collection *mgo.Collect
 
 	for i := 0; i < worker.thread; i++ {
 		go func(n int) {
-			execute(n, ch, device, re, collection)
+			execute(n, ch, device, re, session)
 			wg.Done()
 		}(i)
 	}
@@ -71,16 +71,16 @@ func (server *Server) Bind(worker Worker, device Device, collection *mgo.Collect
 	defer close(ch)
 }
 
-func execute(n int, ch<-chan []byte, device Device, re rule.RuleEngine, collection *mgo.Collection) {
+func execute(n int, ch<-chan []byte, device Device, re rule.RuleEngine, session *mgo.Session) {
 
 //	data := make(map[string]string)
 	for raw := range ch {
 		msg := re.Parse(raw)
-		InsertMapToMongoDB(msg, collection)
+		InsertMapToMongoDB(msg, session)
 	}
 }
 
-func InsertMapToMongoDB(msg *rule.Message, collection *mgo.Collection) {
+func InsertMapToMongoDB(msg *rule.Message, session *mgo.Session) {
 
 	//	var waitGroup sync.WaitGroup
 	//
@@ -90,7 +90,7 @@ func InsertMapToMongoDB(msg *rule.Message, collection *mgo.Collection) {
 	//	for i := 0; i < threadCnt; i++{
 	go func() {
 		if msg != nil {
-			err := collection.Insert(msg)
+			err := session.DB("test").C("gpsDeviceInfo").Insert(msg)
 			fmt.Println(msg)
 			if err != nil {
 				log.Panic(err)
