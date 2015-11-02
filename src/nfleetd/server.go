@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	BUFFER = 40
+	BUFFER = 300
 )
 
 type Server struct {
@@ -75,8 +75,10 @@ func execute(n int, ch<-chan []byte, device Device, re rule.RuleEngine, session 
 
 //	data := make(map[string]string)
 	for raw := range ch {
+		fmt.Println("raw message : " + string(raw))
 		msg := re.Parse(raw)
-		InsertMapToMongoDB(msg, session)
+		fmt.Println(msg)
+//		InsertMapToMongoDB(msg, session)
 	}
 }
 

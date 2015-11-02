@@ -28,6 +28,7 @@ type Rule uint8
 
 const (
 	GOOME_STD Rule = iota
+	MEITRACK_STD Rule = iota
 )
 
 func CreateRuleEngine(rule string) (RuleEngine, error) {
@@ -39,8 +40,9 @@ func CreateRuleEngine(rule string) (RuleEngine, error) {
 	switch r {
 	case GOOME_STD:
 		return new(GoomeStd), nil
+	case MEITRACK_STD:
+		return new(MeitrackStd), nil
 	}
-
 	var re RuleEngine
 	return re, fmt.Errorf("invalid rule engine type: %q", rule)
 }
@@ -49,6 +51,8 @@ func parseRule(rule string) (Rule, error) {
 	switch rule {
 	case "goome/std":
 		return GOOME_STD, nil
+	case "meitrack/std":
+		return MEITRACK_STD, nil
 	}
 
 	var r Rule
