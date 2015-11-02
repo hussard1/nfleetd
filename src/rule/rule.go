@@ -9,19 +9,27 @@ type RuleEngine interface {
 }
 
 type Message struct {
-	StartByte string
 	PacketLen string
-	ProtocolNum string
-	Datetime string
-	SatelliteNum string
+	IMEI string
+	CommandType string
+	EventCode int
 	Latitude float64
 	Longtitude float64
-	Speed string
-	Direction string
-	RemainByte string
-	SerialNum string
-	Checksum string
-	StopByte string
+	Datetime string
+	GPSStatus string
+	GSMStatus int
+	Speed int
+	Direction int
+	SatelliteNum int
+	HorizontalPositionAccuracy float64
+	Altitude int
+	Mileage string
+	RunTime string
+	BaseStationInformation string
+	IOPortStatus string
+    AnalogInputValue string
+	RFID string
+	CheckCode string
 }
 
 type Rule uint8

@@ -75,21 +75,14 @@ func execute(n int, ch<-chan []byte, device Device, re rule.RuleEngine, session 
 
 //	data := make(map[string]string)
 	for raw := range ch {
-		fmt.Println("raw message : " + string(raw))
 		msg := re.Parse(raw)
 		fmt.Println(msg)
-//		InsertMapToMongoDB(msg, session)
+		InsertMapToMongoDB(msg, session)
 	}
 }
 
 func InsertMapToMongoDB(msg *rule.Message, session *mgo.Session) {
 
-	//	var waitGroup sync.WaitGroup
-	//
-	//	 Perform 5 concurrent queries against the database.
-	//	waitGroup.Add(threadCnt)
-
-	//	for i := 0; i < threadCnt; i++{
 	go func() {
 		if msg != nil {
 			err := session.DB("test").C("gpsDeviceInfo").Insert(msg)
