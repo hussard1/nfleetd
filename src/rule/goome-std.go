@@ -10,12 +10,12 @@ type GoomeStd struct {
 
 func (re *GoomeStd) Parse(raw []byte) *Message{
 	msg := new(Message)
-	msg = parseData(raw, msg)
+	msg = parseGoomeData(raw, msg)
 	msg = calculateData(msg)
 	return msg
 }
 
-func parseData(raw []byte, msg *Message) *Message{
+func parseGoomeData(raw []byte, msg *Message) *Message{
 	data := hex.EncodeToString(raw)
 	msg.StartByte = data[0:4]
 	msg.PacketLen = data[4:6]
