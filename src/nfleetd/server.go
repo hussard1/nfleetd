@@ -5,6 +5,7 @@ import (
 	"sync"
 	"rule"
 	"gopkg.in/mgo.v2"
+	"encoding/json"
 )
 
 const (
@@ -76,7 +77,8 @@ func execute(n int, ch<-chan []byte, device Device, re rule.RuleEngine, session 
 //	data := make(map[string]string)
 	for raw := range ch {
 		msg := re.Parse(raw)
-		fmt.Println(msg)
+		b, _ := json.Marshal(msg)
+		log.Debug("Receive data : ", string(b))
 		InsertMapToMongoDB(msg, session)
 	}
 }
@@ -86,9 +88,8 @@ func InsertMapToMongoDB(msg *rule.Message, session *mgo.Session) {
 	go func() {
 		if msg != nil {
 			err := session.DB("test").C("gpsDeviceInfo").Insert(msg)
-			fmt.Println(msg)
 			if err != nil {
-				log.Panic(err)
+				log.Error("Cannot insert to Mongodb : ", err)
 			}
 		}
 	}()

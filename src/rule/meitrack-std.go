@@ -16,7 +16,7 @@ func (re *MeitrackStd) Parse(raw []byte) *Message{
 
 func parseMeitrackData(raw []byte, msg *Message) *Message{
 	data := strings.Split(string(raw), ",")
-	msg.PacketLen = data[0]
+	msg.PacketLen = data[0][2:len(data[0])]
 	msg.IMEI = data[1]
 	msg.CommandType = data[2]
 	msg.EventCode, _ = strconv.Atoi(data[3])
@@ -30,13 +30,13 @@ func parseMeitrackData(raw []byte, msg *Message) *Message{
 	msg.Direction, _ = strconv.Atoi(data[11])
 	msg.HorizontalPositionAccuracy, _ = strconv.ParseFloat(data[12], 64)
 	msg.Altitude, _ = strconv.Atoi(data[13])
-	msg.Mileage = data[14]
-	msg.RunTime = data[15]
+	msg.Mileage, _ = strconv.Atoi(data[14])
+	msg.RunTime, _ = strconv.Atoi(data[15])
 	msg.BaseStationInformation = data[16]
 	msg.IOPortStatus = data[17]
 	msg.AnalogInputValue = data[18]
 	msg.RFID = data[19]
-	msg.CheckCode = data[20]
+	msg.CheckCode = data[20][0:3]
 
 	return msg
 }
