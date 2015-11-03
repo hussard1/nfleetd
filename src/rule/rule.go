@@ -23,8 +23,8 @@ type Message struct {
 	SatelliteNum int
 	HorizontalPositionAccuracy float64
 	Altitude int
-	Mileage string
-	RunTime string
+	Mileage int
+	RunTime int
 	BaseStationInformation string
 	IOPortStatus string
     AnalogInputValue string
