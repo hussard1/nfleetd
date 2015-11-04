@@ -3,14 +3,15 @@ package rule
 import (
 	"strings"
 	"strconv"
+	"net"
 )
 
 type MeitrackStd struct {
 }
 
-func (re *MeitrackStd) Parse(raw []byte) *Message{
+func (re *MeitrackStd) Parse(dataLength int, rawdata []byte, conn net.Conn) *Message{
 	msg := new(Message)
-	msg = parseMeitrackData(raw, msg)
+	msg = parseMeitrackData(rawdata[:dataLength], msg)
 	return msg
 }
 

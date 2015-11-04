@@ -16,18 +16,26 @@ type Server struct {
 
 }
 
+type DataSet struct {
+	dataLength int
+	rawdata []byte
+	conn net.Conn
+}
+
 func (server *Server) Bind(worker Worker, device Device, session *mgo.Session) {
 	address := fmt.Sprintf("%s:%d", device.address, device.port)
 	log.Info(fmt.Sprintf("Bind name=%s, address=%s", device.name, address))
 
 	listener, err := net.Listen(device.protocol, address)
+
 	if err != nil {
 		log.Error("Cannot bind hostname: ", err)
 		return
 	}
 	defer listener.Close()
 
-	ch := make(chan []byte)
+//	ch := make(chan []byte)
+	ch := make(chan DataSet, 1)
 
 	re, err := rule.CreateRuleEngine(device.rule)
 	if err != nil {
@@ -36,6 +44,7 @@ func (server *Server) Bind(worker Worker, device Device, session *mgo.Session) {
 	}
 
 	var wg sync.WaitGroup
+
 	wg.Add(worker.thread)
 
 	for i := 0; i < worker.thread; i++ {
@@ -58,26 +67,28 @@ func (server *Server) Bind(worker Worker, device Device, session *mgo.Session) {
 		defer conn.Close()
 
 		go func(c net.Conn) {
-			data := make([]byte, BUFFER)
+			dataSet := new(DataSet)
+			dataSet.conn = c
+			dataSet.rawdata = make([]byte, BUFFER)
 			for {
-				n, err := c.Read(data)
+				dataSet.dataLength, err = c.Read(dataSet.rawdata)
 				if err != nil {
 					log.Error("Cannot read from stream: ", err)
 					return
 				}
-				ch <- data[:n]
+				ch <- *dataSet
 			}
 		}(conn)
 	}
 	defer close(ch)
 }
 
-func execute(n int, ch<-chan []byte, device Device, re rule.RuleEngine, session *mgo.Session) {
+func execute(n int, ch<-chan DataSet, device Device, re rule.RuleEngine, session *mgo.Session) {
 
-//	data := make(map[string]string)
-	for raw := range ch {
-		msg := re.Parse(raw)
+	for dataSet := range ch {
+		msg := re.Parse(dataSet.dataLength, dataSet.rawdata, dataSet.conn)
 		b, _ := json.Marshal(msg)
+		fmt.Println("Raw data : ", string(dataSet.rawdata[:dataSet.dataLength]))
 		log.Debug("Receive data : ", string(b))
 		InsertMapToMongoDB(msg, session)
 	}

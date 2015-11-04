@@ -1,17 +1,28 @@
 package rule
 
 import (
+	"net"
+//	"fmt"
 )
 
 type AnonymousStd struct {
 }
 
-func (re *AnonymousStd) Parse(raw []byte) *Message{
+func (re *AnonymousStd) Parse(dataLength int, rawdata []byte, conn net.Conn) *Message{
 	msg := new(Message)
+	if dataLength < 25 {
+		replyAnonymous(conn)
+	}
 	//	msg = parseGoomeData(raw, msg)
 	//	msg = calculateData(msg)
 	return msg
 }
+
+func replyAnonymous(conn net.Conn){
+	conn.Write([]byte("LOAD"))
+}
+
+
 
 func parseAnonymousData(raw []byte, msg *Message) *Message{
 //	data := hex.EncodeToString(raw)

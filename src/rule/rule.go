@@ -2,10 +2,11 @@ package rule
 
 import (
 	"fmt"
+	"net"
 )
 
 type RuleEngine interface {
-	Parse([]byte) *Message
+	Parse(dataLength int, rawdata []byte, conn net.Conn) *Message
 }
 
 type Message struct {
