@@ -4,6 +4,7 @@ import (
 //	"encoding/hex"
 //	"strconv"
 	"net"
+	"fmt"
 )
 
 type GoomeStd struct {
@@ -11,6 +12,7 @@ type GoomeStd struct {
 
 func (re *GoomeStd) Parse(dataLength int, rawdata []byte, conn net.Conn) *Message{
 	msg := new(Message)
+	fmt.Println(rawdata[:dataLength])
 //	msg = parseGoomeData(raw, msg)
 //	msg = calculateData(msg)
 	return msg

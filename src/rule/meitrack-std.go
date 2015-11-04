@@ -4,6 +4,7 @@ import (
 	"strings"
 	"strconv"
 	"net"
+	"fmt"
 )
 
 type MeitrackStd struct {
@@ -12,6 +13,7 @@ type MeitrackStd struct {
 func (re *MeitrackStd) Parse(dataLength int, rawdata []byte, conn net.Conn) *Message{
 	msg := new(Message)
 	msg = parseMeitrackData(rawdata[:dataLength], msg)
+	fmt.Println(string(rawdata[:dataLength]))
 	return msg
 }
 
