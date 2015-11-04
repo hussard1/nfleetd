@@ -88,7 +88,6 @@ func execute(n int, ch<-chan DataSet, device Device, re rule.RuleEngine, session
 	for dataSet := range ch {
 		msg := re.Parse(dataSet.dataLength, dataSet.rawdata, dataSet.conn)
 		b, _ := json.Marshal(msg)
-		fmt.Println("Raw data : ", string(dataSet.rawdata[:dataSet.dataLength]))
 		log.Debug("Receive data : ", string(b))
 		InsertMapToMongoDB(msg, session)
 	}
