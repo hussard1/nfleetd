@@ -3,12 +3,13 @@ package rule
 import (
 //	"encoding/hex"
 //	"strconv"
+	"net"
 )
 
 type GoomeStd struct {
 }
 
-func (re *GoomeStd) Parse(raw []byte) *Message{
+func (re *GoomeStd) Parse(dataLength int, rawdata []byte, conn net.Conn) *Message{
 	msg := new(Message)
 //	msg = parseGoomeData(raw, msg)
 //	msg = calculateData(msg)
