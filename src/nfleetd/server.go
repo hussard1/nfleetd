@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	BUFFER = 300
+	BUFFER = 4096
 )
 
 type Server struct {

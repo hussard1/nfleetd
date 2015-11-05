@@ -5,6 +5,8 @@ import (
 //	"strconv"
 	"net"
 	"fmt"
+	"util"
+
 )
 
 type GoomeStd struct {
@@ -13,9 +15,36 @@ type GoomeStd struct {
 func (re *GoomeStd) Parse(dataLength int, rawdata []byte, conn net.Conn) *Message{
 	msg := new(Message)
 	fmt.Println(hex.EncodeToString(rawdata[:dataLength]))
+	fmt.Println(dataLength)
+	fmt.Println(conn)
+	responseGoomeLoginData(rawdata, conn)
+//	getGPSData(conn)
 //	msg = parseGoomeData(raw, msg)
 //	msg = calculateData(msg)
 	return msg
+}
+
+func responseGoomeLoginData(rawdata []byte, conn net.Conn){
+	responseLoginData := []byte{0x78, 0x78, 0x05, 0x01, rawdata[12], rawdata[13], byte(util.Crc16(rawdata[14:15])), byte(util.Crc16(rawdata[15:16])), 0x0D, 0x0A}
+	_, err := conn.Write(responseLoginData)
+	if err != nil{
+		fmt.Println("Goome Login data failed to response: ", err)
+	}
+}
+
+func getGPSData(conn net.Conn){
+//	go func(conn net.Conn) {
+		data := make([]byte, 100)
+		for {
+			n, err := conn.Read(data)
+			if err != nil {
+				fmt.Println("Goome GPS data failed to read: ", err)
+				return
+			}
+
+		fmt.Println(hex.EncodeToString(data[:n]))
+		}
+//	}(conn)
 }
 
 func parseGoomeData(raw []byte, msg *Message) *Message{
