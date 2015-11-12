@@ -6,31 +6,20 @@ import (
 )
 
 type RuleEngine interface {
-	Parse(dataLength int, rawdata []byte, conn net.Conn) *Message
+	Parse(dataLength int, rawdata []byte, conn net.Conn) []Message
 }
 
 type Message struct {
-	PacketLen string
+	PacketLength int
 	IMEI string
-	CommandType string
-	EventCode int
+	Datetime string
+	SatelliteNum int
 	Latitude float64
 	Longtitude float64
-	Datetime string
 	GPSStatus string
 	GSMStatus int
 	Speed int
-	Direction int
-	SatelliteNum int
-	HorizontalPositionAccuracy float64
-	Altitude int
-	Mileage int
-	RunTime int
-	BaseStationInformation string
-	IOPortStatus string
-    AnalogInputValue string
-	RFID string
-	CheckCode string
+	Direction string
 }
 
 type Rule uint8

@@ -86,20 +86,22 @@ func (server *Server) Bind(worker Worker, device Device, session *mgo.Session) {
 func execute(n int, ch<-chan DataSet, device Device, re rule.RuleEngine, session *mgo.Session) {
 
 	for dataSet := range ch {
-		msg := re.Parse(dataSet.dataLength, dataSet.rawdata, dataSet.conn)
-		b, _ := json.Marshal(msg)
+		msgList := re.Parse(dataSet.dataLength, dataSet.rawdata, dataSet.conn)
+		b, _ := json.Marshal(msgList)
 		log.Debug("Receive data : ", string(b))
-		InsertMapToMongoDB(msg, session)
+		fmt.Println(msgList)
+		InsertMapToMongoDB(msgList, session)
 	}
 }
 
-func InsertMapToMongoDB(msg *rule.Message, session *mgo.Session) {
-
+func InsertMapToMongoDB(msgList []rule.Message, session *mgo.Session) {
 	go func() {
-		if msg != nil {
-			err := session.DB("test").C("gpsDeviceInfo").Insert(msg)
-			if err != nil {
-				log.Error("Cannot insert to Mongodb : ", err)
+		if msgList != nil {
+			for i := 0; i < len(msgList); i++ {
+				err := session.DB("test").C("gpsDeviceInfo").Insert(msgList[i])
+				if err != nil {
+					log.Error("Cannot insert to Mongodb : ", err)
+				}
 			}
 		}
 	}()
