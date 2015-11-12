@@ -10,7 +10,7 @@ import (
 type MeitrackStd struct {
 }
 
-func (re *MeitrackStd) Parse(dataLength int, rawdata []byte, conn net.Conn) []Message{
+func (re *MeitrackStd) Parse(dataLength int, rawdata []byte, conn net.Conn, IMEIMap map[net.Conn]string) []Message{
 	msg := new(Message)
 	msgList := make([]Message, 0)
 	msg = parseMeitrackData(rawdata[:dataLength], msg)

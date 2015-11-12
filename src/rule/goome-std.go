@@ -11,34 +11,39 @@ import (
 type GoomeStd struct {
 }
 
-func (re *GoomeStd) Parse(dataLength int, rawdata []byte, conn net.Conn) []Message{
+func (re *GoomeStd) Parse(dataLength int, rawdata []byte, conn net.Conn, IMEIMap map[net.Conn]string) []Message{
+
+//	fmt.Println(rawdata[:dataLength])
+//	fmt.Println(dataLength)
 
 	msg := new(Message)
 
 	msgList := make([]Message, 0)
 
-	var startpoint int = -1
-	var endpoint int
-	var IMEI string
+	var startPoint int = -1
+	var endPoint int
 
 	for i := 0; i < dataLength; i++{
 		if rawdata[i] == 0x78 && rawdata[i+1] == 0x78{
-			startpoint = i
+			startPoint = i
 		}else if rawdata[i] == 0x0D && rawdata[i+1] == 0x0A{
-			endpoint = i+2
-			if startpoint != -1 && (endpoint - startpoint) > 14 && (endpoint - startpoint) < 45{
-				msg = parseGoomeRawData(rawdata[startpoint:endpoint], msg)
-				if msg.IMEI != ""{
-					IMEI = msg.IMEI
+			endPoint = i+2
+			if startPoint != -1 && (endPoint - startPoint) > 14 && (endPoint - startPoint) < 45{
+				msg = parseGoomeRawData(rawdata[startPoint:endPoint], msg)
+
+				if value, ok := IMEIMap[conn]; ok {
+					msg.IMEI = value
 				}else{
-					msg.IMEI = IMEI
+					IMEIMap[conn] = msg.IMEI
 				}
+
 				msgList = append(msgList, *msg)
 			}
 		}
 	}
 
-	if (dataLength == 15 && rawdata[3] == 0x13) || (dataLength == 18 && rawdata[3] == 0x01) {
+	if (dataLength == 15 && rawdata[3] == 0x13) ||
+		(dataLength == 18 && rawdata[3] == 0x01) {
 		responseGoomeData(rawdata, dataLength, conn)
 	}
 
@@ -48,7 +53,7 @@ func (re *GoomeStd) Parse(dataLength int, rawdata []byte, conn net.Conn) []Messa
 func responseGoomeData(rawdata []byte, dataLength int, conn net.Conn){
 	responseLoginData := []byte{0x78, 0x78, 0x05, 0x01, 0x00, 0x01, 0xD9, 0xDC, 0x0D, 0x0A}
 
-	responseLoginData[4] = rawdata[3]
+	responseLoginData[3] = rawdata[3]
 	responseLoginData[4] = rawdata[dataLength-6]
 	responseLoginData[5] = rawdata[dataLength-5]
 	responseLoginData[6] = byte(util.Crc16(rawdata[dataLength-4:dataLength-3]))
@@ -64,7 +69,6 @@ func parseGoomeRawData(rawdata []byte, msg *Message) *Message{
 
 	data := hex.EncodeToString(rawdata)
 
-	var IMEI string
 	var Latitude int64
 	var Longtitude int64
 
@@ -72,7 +76,7 @@ func parseGoomeRawData(rawdata []byte, msg *Message) *Message{
 		msg.GPSStatus = strconv.Itoa(int(rawdata[4]))
 		msg.GSMStatus = int(rawdata[6])
 	}else if len(rawdata) == 18 && rawdata[3] == 0x01{
-		IMEI = data[9:24]
+		msg.IMEI = data[9:24]
 	}else if len(rawdata) == 38 && rawdata[3] == 0x12{
 		msg.Datetime = parseGoomeDatetimeData(rawdata[4:10])
 		msg.SatelliteNum = int(rawdata[10])
@@ -86,8 +90,6 @@ func parseGoomeRawData(rawdata []byte, msg *Message) *Message{
 
 	}
 	msg.PacketLength = int(rawdata[2])
-
-	msg.IMEI = IMEI
 
 	return msg
 }
