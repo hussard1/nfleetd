@@ -8,14 +8,17 @@ import (
 type AnonymousStd struct {
 }
 
-func (re *AnonymousStd) Parse(dataLength int, rawdata []byte, conn net.Conn) *Message{
+func (re *AnonymousStd) Parse(dataLength int, rawdata []byte, conn net.Conn) []Message{
 	msg := new(Message)
-	if dataLength < 25 {
-		replyAnonymous(conn)
-	}
+	msgList := make([]Message, 0)
+	msgList = append(msgList, *msg)
+
+//	if dataLength < 25 {
+//		replyAnonymous(conn)
+//	}
 	//	msg = parseGoomeData(raw, msg)
 	//	msg = calculateData(msg)
-	return msg
+	return msgList
 }
 
 func replyAnonymous(conn net.Conn){
