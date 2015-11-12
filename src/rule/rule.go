@@ -6,7 +6,7 @@ import (
 )
 
 type RuleEngine interface {
-	Parse(dataLength int, rawdata []byte, conn net.Conn) []Message
+	Parse(dataLength int, rawdata []byte, conn net.Conn, IMEIMap map[net.Conn]string) []Message
 }
 
 type Message struct {
@@ -20,6 +20,7 @@ type Message struct {
 	GSMStatus int
 	Speed int
 	Direction string
+	EventCode string
 }
 
 type Rule uint8

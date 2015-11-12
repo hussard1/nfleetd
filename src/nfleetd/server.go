@@ -37,6 +37,8 @@ func (server *Server) Bind(worker Worker, device Device, session *mgo.Session) {
 //	ch := make(chan []byte)
 	ch := make(chan DataSet, 1)
 
+	IMEIMap := make(map[net.Conn]string)
+
 	re, err := rule.CreateRuleEngine(device.rule)
 	if err != nil {
 		log.Error("Couldn't create the rule engine", err)
@@ -49,7 +51,7 @@ func (server *Server) Bind(worker Worker, device Device, session *mgo.Session) {
 
 	for i := 0; i < worker.thread; i++ {
 		go func(n int) {
-			execute(n, ch, device, re, session)
+			execute(n, ch, IMEIMap, device, re, session)
 			wg.Done()
 		}(i)
 	}
@@ -83,22 +85,23 @@ func (server *Server) Bind(worker Worker, device Device, session *mgo.Session) {
 	defer close(ch)
 }
 
-func execute(n int, ch<-chan DataSet, device Device, re rule.RuleEngine, session *mgo.Session) {
+func execute(n int, ch<-chan DataSet, IMEIMap map[net.Conn]string, device Device, re rule.RuleEngine, session *mgo.Session) {
 
 	for dataSet := range ch {
-		msgList := re.Parse(dataSet.dataLength, dataSet.rawdata, dataSet.conn)
+		msgList := re.Parse(dataSet.dataLength, dataSet.rawdata, dataSet.conn, IMEIMap)
 		b, _ := json.Marshal(msgList)
 		log.Debug("Receive data : ", string(b))
-		fmt.Println(msgList)
+//		fmt.Println(msgList)
 		InsertMapToMongoDB(msgList, session)
 	}
 }
 
 func InsertMapToMongoDB(msgList []rule.Message, session *mgo.Session) {
-	go func() {
+	go func(){
 		if msgList != nil {
 			for i := 0; i < len(msgList); i++ {
 				err := session.DB("test").C("gpsDeviceInfo").Insert(msgList[i])
+				fmt.Println(msgList[i])
 				if err != nil {
 					log.Error("Cannot insert to Mongodb : ", err)
 				}
