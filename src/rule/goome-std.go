@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"util"
 	"strconv"
+	"bytes"
 )
 
 type GoomeStd struct {
@@ -95,15 +96,19 @@ func parseGoomeRawData(rawdata []byte, msg *Message) *Message{
 }
 
 func parseGoomeDatetimeData(rawdata []byte) string{
-	var result string
+
+	var buffer bytes.Buffer
+
 	for i:=0; i < len(rawdata); i++{
 		if i > 0 && rawdata[i] < 10{
-			result = result + "0" + strconv.Itoa(int(rawdata[i]))
+			buffer.WriteString("0")
+			buffer.WriteString(strconv.Itoa(int(rawdata[i])))
+
 		}else{
-			result += strconv.Itoa(int(rawdata[i]))
+			buffer.WriteString(strconv.Itoa(int(rawdata[i])))
 		}
 	}
-	return result
+	return buffer.String()
 }
 
 
@@ -114,7 +119,6 @@ func parseGoomeLatitudeData(lat int64) float64{
 	result1 := lat/3
 	result2 := result1/600000
 	return float64(result2) + (float64(result1 - result2*600000)/1000000)
-
 }
 
 func parseGoomeLongtitudeData(long int64) float64{
