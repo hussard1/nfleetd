@@ -7,15 +7,15 @@ import (
 	"util"
 	"strconv"
 	"bytes"
+	"time"
 )
+
+const timeformat = "060102150405"
 
 type GoomeStd struct {
 }
 
 func (re *GoomeStd) Parse(dataLength int, rawdata []byte, conn net.Conn, IMEIMap map[net.Conn]string) []Message{
-
-//	fmt.Println(rawdata[:dataLength])
-//	fmt.Println(dataLength)
 
 	msg := new(Message)
 
@@ -69,6 +69,7 @@ func responseGoomeData(rawdata []byte, dataLength int, conn net.Conn){
 func parseGoomeRawData(rawdata []byte, msg *Message) *Message{
 
 	data := hex.EncodeToString(rawdata)
+	datetime := time.Now().Format(timeformat)
 
 	var Latitude int64
 	var Longtitude int64
@@ -76,8 +77,10 @@ func parseGoomeRawData(rawdata []byte, msg *Message) *Message{
 	if len(rawdata) == 15 && rawdata[3] == 0x13{
 		msg.GPSStatus = strconv.Itoa(int(rawdata[4]))
 		msg.GSMStatus = int(rawdata[6])
+		msg.Datetime = datetime
 	}else if len(rawdata) == 18 && rawdata[3] == 0x01{
 		msg.IMEI = data[9:24]
+		msg.Datetime = datetime
 	}else if len(rawdata) == 38 && rawdata[3] == 0x12{
 		msg.Datetime = parseGoomeDatetimeData(rawdata[4:10])
 		msg.SatelliteNum = int(rawdata[10])
