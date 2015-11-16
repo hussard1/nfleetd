@@ -46,11 +46,11 @@ type Gps struct {
 }
 
 type Gsm struct {
-	strength int `json:"strength"`
+	Strength int `json:"strength"`
 }
 
 type Event struct{
-	lowbattery int `json:"lowbattery"`
+	Lowbattery int `json:"lowbattery"`
 }
 
 type Rule uint8
