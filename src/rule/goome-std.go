@@ -7,7 +7,7 @@ import (
 	"util"
 	"strconv"
 	"bytes"
-//	"time"
+	"time"
 )
 
 const timeformat = "060102150405"
@@ -31,13 +31,11 @@ func (re *GoomeStd) Parse(dataLength int, rawdata []byte, conn net.Conn, IMEIMap
 			endPoint = i+2
 			if startPoint != -1 && (endPoint - startPoint) > 14 && (endPoint - startPoint) < 45{
 				msg = parseGoomeRawData(rawdata[startPoint:endPoint], msg)
-
 				if value, ok := IMEIMap[conn]; ok {
 					msg.IMEI = value
 				}else{
 					IMEIMap[conn] = msg.IMEI
 				}
-
 				msgList = append(msgList, *msg)
 			}
 		}
@@ -69,20 +67,22 @@ func responseGoomeData(rawdata []byte, dataLength int, conn net.Conn){
 func parseGoomeRawData(rawdata []byte, msg *Message) *Message{
 
 	data := hex.EncodeToString(rawdata)
-//	datetime := time.Now().Format(timeformat)
+	datetime := time.Now().Format(timeformat)
 
 	var Latitude int64
 	var Longtitude int64
 
 	if len(rawdata) == 15 && rawdata[3] == 0x13{
-//		msg.GPSStatus = strconv.Itoa(int(rawdata[4]))
-//		msg.GSMStatus = int(rawdata[6])
-//		msg.Datetime = datetime
+		status := strconv.FormatInt(int64(rawdata[4]), 2)
+		msg.Acc, _ = strconv.Atoi(status[0:1])
+		msg.Power, _ = strconv.Atoi(status[1:2])
+		msg.Voltage = int(rawdata[5])
+		msg.Strength = int(rawdata[6])
+		msg.Time = datetime
 	}else if len(rawdata) == 18 && rawdata[3] == 0x01{
-//		msg.IMEI = data[9:24]
-//		msg.Datetime = datetime
+		msg.IMEI = data[9:24]
+		msg.Time = datetime
 	}else if len(rawdata) == 38 && rawdata[3] == 0x12{
-		msg.IMEI = "39453453847"
 		msg.Time = parseGoomeDatetimeData(rawdata[4:10])
 		msg.Location.Satellitenum = int(rawdata[10])
 		Latitude, _ = strconv.ParseInt(data[22:30], 16, 64)
