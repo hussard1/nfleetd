@@ -89,14 +89,13 @@ func execute(n int, ch<-chan DataSet, IMEIMap map[net.Conn]string, device Device
 
 	for dataSet := range ch {
 		msgList := re.Parse(dataSet.dataLength, dataSet.rawdata, dataSet.conn, IMEIMap)
-		b, _ := json.Marshal(msgList)
-		log.Debug("Receive data : ", string(b))
-//		fmt.Println(msgList)
-		InsertMapToMongoDB(msgList, session)
+		jsondata, _ := json.Marshal(msgList)
+		log.Debug("Receive data : ", string(jsondata))
+		insertDataToMongoDB(msgList, session)
 	}
 }
 
-func InsertMapToMongoDB(msgList []rule.Message, session *mgo.Session) {
+func insertDataToMongoDB(msgList []rule.Message, session *mgo.Session) {
 	go func(){
 		if msgList != nil {
 			for i := 0; i < len(msgList); i++ {
