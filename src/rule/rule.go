@@ -10,17 +10,47 @@ type RuleEngine interface {
 }
 
 type Message struct {
-	PacketLength int
-	IMEI string
-	Datetime string
-	SatelliteNum int
-	Latitude float64
-	Longtitude float64
-	GPSStatus string
-	GSMStatus int
-	Speed int
-	Direction string
-	EventCode string
+	IMEI string `json:"imei"`
+	Time string `json:"time"`
+	Location `json:"location"`
+	Cell `json:"cell"`
+	Status `json:"status"`
+	Event `json:"event"`
+}
+
+type Location struct{
+	Satellitenum int `json:"satellitenum"`
+	Latitude float64 `json:"latitude"`
+	Longtitude float64 `json:"longtitude"`
+	Speed int `json:"speed"`
+	Direction string `json:"direction"`
+}
+
+type Cell struct{
+	Mcc int `json:"mcc"`
+	Mnc int `json:"mnc"`
+	Lac int `json:"lac"`
+	Cellid int `json:"cellid"`
+}
+
+type Status struct{
+	Gps `json:"gps"`
+	Gsm `json:"gsm"`
+}
+
+type Gps struct {
+	Voltage int `json:"voltage"`
+	Power int `json:"power"`
+	Acc int `json:"acc"`
+	Battery int `json:"battery"`
+}
+
+type Gsm struct {
+	strength int `json:"strength"`
+}
+
+type Event struct{
+	lowbattery int `json:"lowbattery"`
 }
 
 type Rule uint8

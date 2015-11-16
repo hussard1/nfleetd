@@ -21,15 +21,14 @@ func (re *MeitrackStd) Parse(dataLength int, rawdata []byte, conn net.Conn, IMEI
 
 func parseMeitrackData(raw []byte, msg *Message) *Message{
 	data := strings.Split(string(raw), ",")
-	msg.PacketLength, _ = strconv.Atoi(data[0][2:len(data[0])])
 	msg.IMEI = data[1]
 //	msg.GPSStatus, _ = strconv.Atoi(data[3])
 	msg.Latitude, _ = strconv.ParseFloat(data[4], 64)
 	msg.Longtitude, _ = strconv.ParseFloat(data[5], 64)
-	msg.Datetime = data[6]
-	msg.GPSStatus = data[7]
-	msg.SatelliteNum, _ = strconv.Atoi(data[8])
-	msg.GSMStatus, _ = strconv.Atoi(data[9])
+	msg.Time = data[6]
+//	msg.GPSStatus = data[7]
+	msg.Satellitenum, _ = strconv.Atoi(data[8])
+	msg.strength, _ = strconv.Atoi(data[9])
 	msg.Speed, _ = strconv.Atoi(data[10])
 	msg.Direction = data[11]
 //	msg.HorizontalPositionAccuracy, _ = strconv.ParseFloat(data[12], 64)
