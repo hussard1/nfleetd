@@ -92,7 +92,7 @@ func execute(n int, ch<-chan DataSet, IMEIMap map[net.Conn]string, device Device
 		jsondata, _ := json.Marshal(msgList)
 		log.Debug("Receive data : ", string(jsondata))
 		fmt.Println(string(jsondata))
-//		insertDataToMongoDB(msgList, session)
+		insertDataToMongoDB(msgList, session)
 	}
 }
 

@@ -11,6 +11,7 @@ import (
 )
 
 const timeformat = "060102150405"
+const devicetype = "Goome"
 
 type GoomeStd struct {
 }
@@ -94,6 +95,9 @@ func parseGoomeRawData(rawdata []byte, msg *Message) *Message{
 	}else if len(rawdata) == 42{
 
 	}
+
+	msg.Devicetype  =devicetype
+	msg.Messagetype = data[6:8]
 
 	return msg
 }
