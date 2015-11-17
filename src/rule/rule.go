@@ -12,6 +12,8 @@ type RuleEngine interface {
 type Message struct {
 	IMEI string `json:"imei"`
 	Time string `json:"time"`
+	Devicetype string `json:"devicetype"`
+	Messagetype string `json:"messagetype"`
 	Location `json:"location"`
 	Cell `json:"cell"`
 	Status `json:"status"`
