@@ -12,8 +12,8 @@ type RuleEngine interface {
 type Message struct {
 	IMEI string `json:"imei"`
 	Time string `json:"time"`
-	Devicetype string `json:"devicetype"`
-	Messagetype string `json:"messagetype"`
+	Devicetype int `json:"devicetype"`
+	Messagetype int `json:"messagetype"`
 	Location `json:"location"`
 	Cell `json:"cell"`
 	Status `json:"status"`
@@ -21,11 +21,11 @@ type Message struct {
 }
 
 type Location struct{
-	Satellitenum int `json:"satellitenum"`
+	Satellitenum int64 `json:"satellitenum"`
 	Latitude float64 `json:"latitude"`
 	Longtitude float64 `json:"longtitude"`
 	Speed int `json:"speed"`
-	Direction string `json:"direction"`
+	Direction int `json:"direction"`
 }
 
 type Cell struct{

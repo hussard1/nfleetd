@@ -27,10 +27,10 @@ func parseMeitrackData(raw []byte, msg *Message) *Message{
 	msg.Longtitude, _ = strconv.ParseFloat(data[5], 64)
 	msg.Time = data[6]
 //	msg.GPSStatus = data[7]
-	msg.Satellitenum, _ = strconv.Atoi(data[8])
+	msg.Satellitenum, _ = strconv.ParseInt(data[8], 10, 64)
 	msg.Strength, _ = strconv.Atoi(data[9])
 	msg.Speed, _ = strconv.Atoi(data[10])
-	msg.Direction = data[11]
+	msg.Direction, _ = strconv.Atoi(data[11])
 //	msg.HorizontalPositionAccuracy, _ = strconv.ParseFloat(data[12], 64)
 //	msg.Altitude, _ = strconv.Atoi(data[13])
 //	msg.Mileage, _ = strconv.Atoi(data[14])
