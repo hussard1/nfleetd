@@ -6,6 +6,7 @@ import (
 	"rule"
 	"gopkg.in/mgo.v2"
 	"encoding/json"
+	"io"
 )
 
 const (
@@ -34,10 +35,9 @@ func (server *Server) Bind(worker Worker, device Device, session *mgo.Session) {
 	}
 	defer listener.Close()
 
-//	ch := make(chan []byte)
 	ch := make(chan DataSet, 1)
 
-	IMEIMap := make(map[net.Conn]string)
+	imeiMap := make(map[net.Conn]string)
 
 	re, err := rule.CreateRuleEngine(device.rule)
 	if err != nil {
@@ -51,7 +51,7 @@ func (server *Server) Bind(worker Worker, device Device, session *mgo.Session) {
 
 	for i := 0; i < worker.thread; i++ {
 		go func(n int) {
-			execute(n, ch, IMEIMap, device, re, session)
+			execute(n, ch, imeiMap, device, re, session)
 			wg.Done()
 		}(i)
 	}
@@ -66,7 +66,10 @@ func (server *Server) Bind(worker Worker, device Device, session *mgo.Session) {
 			log.Error("Cannot accept hostname: ", err)
 			continue
 		}
-		defer conn.Close()
+		defer func(){
+			conn.Close()
+			delete(imeiMap, conn)
+		}()
 
 		go func(c net.Conn) {
 			dataSet := new(DataSet)
@@ -76,6 +79,10 @@ func (server *Server) Bind(worker Worker, device Device, session *mgo.Session) {
 				dataSet.dataLength, err = c.Read(dataSet.rawdata)
 				if err != nil {
 					log.Error("Cannot read from stream: ", err)
+				    if err == io.EOF {
+						log.Error("detected closed connection", err)
+						delete(imeiMap, conn)
+					}
 					return
 				}
 				ch <- *dataSet
@@ -100,8 +107,7 @@ func insertDataToMongoDB(msgList []rule.Message, session *mgo.Session) {
 	go func(){
 		if msgList != nil {
 			for i := 0; i < len(msgList); i++ {
-				err := session.DB("test").C("gpsDeviceInfo").Insert(msgList[i])
-				fmt.Println(msgList[i])
+				err := session.DB("nfleet").C("gpsdata").Insert(msgList[i])
 				if err != nil {
 					log.Error("Cannot insert to Mongodb : ", err)
 				}
