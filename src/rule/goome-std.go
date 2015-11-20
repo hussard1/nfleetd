@@ -10,9 +10,6 @@ import (
 	"time"
 )
 
-const timeformat = "060102150405"
-const devicetype = 1
-
 type GoomeStd struct {
 }
 
@@ -67,12 +64,12 @@ func responseGoomeData(rawdata []byte, dataLength int, conn net.Conn){
 
 func parseGoomeRawData(rawdata []byte, msg *Message) *Message{
 
-	data := hex.EncodeToString(rawdata)
-	datetime := time.Now().Format(timeformat)
+	stringRawdata := hex.EncodeToString(rawdata)
+	datetime := time.Now().Format(Timeformat)
 
 	//parse GPS status data
 	if len(rawdata) == 15 && rawdata[3] == 0x13{
-		msg.Messagetype = 2
+		msg.Messagetype = Status_message
 		status := strconv.FormatInt(int64(rawdata[4]), 2)
 		msg.Acc, _ = strconv.Atoi(status[0:1])
 		msg.Power, _ = strconv.Atoi(status[1:2])
@@ -81,24 +78,24 @@ func parseGoomeRawData(rawdata []byte, msg *Message) *Message{
 		msg.Time = datetime
 	//parse GPS login data
 	}else if len(rawdata) == 18 && rawdata[3] == 0x01{
-		msg.Messagetype = 1
-		msg.IMEI = data[9:24]
+		msg.Messagetype = Login_message
+		msg.IMEI = stringRawdata[9:24]
 		msg.Time = datetime
 	//parse GPS location data
 	}else if len(rawdata) == 38 && rawdata[3] == 0x12{
-		msg.Messagetype = 3
+		msg.Messagetype = Location_message
 		msg.Time = parseGoomeDatetimeData(rawdata[4:10])
-		msg.Location.Satellitenum , _ = strconv.ParseInt(data[21:22], 16, 32)
-		Latitude, _ := strconv.ParseInt(data[22:30], 16, 32)
-		msg.Latitude = parseGoomeLatitudeData(Latitude)
-		Longtitude, _ := strconv.ParseInt(data[30:38], 16, 32)
-		msg.Longtitude = parseGoomeLongtitudeData(Longtitude)
+		msg.Location.Satellitenum, _ = strconv.ParseInt(stringRawdata[21:22], 16, 32)
+		Latitude, _ := strconv.ParseInt(stringRawdata[22:30], 16, 32)
+		msg.Latitude = parseGoomeLocationData(Latitude)
+		Longtitude, _ := strconv.ParseInt(stringRawdata[30:38], 16, 32)
+		msg.Longtitude = parseGoomeLocationData(Longtitude)
 		msg.Speed = int(rawdata[20])
-		msg.Direction = parseGoomeDirectionData(data[42:46])
+		msg.Direction = parseGoomeDirectionData(stringRawdata[42:46])
 	}else if len(rawdata) == 42{
 
 	}
-	msg.Devicetype = devicetype
+	msg.Devicetype = Goome_u9
 	return msg
 }
 
@@ -107,32 +104,27 @@ func parseGoomeDatetimeData(rawdata []byte) string{
 	var buffer bytes.Buffer
 
 	for i:=0; i < len(rawdata); i++{
-		if i > 0 && rawdata[i] < 10{
+		if i == 0 {
+			buffer.WriteString("20")
+		}else if rawdata[i] < 10 {
 			buffer.WriteString("0")
-			buffer.WriteString(strconv.Itoa(int(rawdata[i])))
-
-		}else{
-			buffer.WriteString(strconv.Itoa(int(rawdata[i])))
 		}
+		buffer.WriteString(strconv.Itoa(int(rawdata[i])))
 	}
 	return buffer.String()
 }
+
+
+func parseGoomeLocationData(lat int64) float64{
+	result1 := lat/3
+	result2 := result1/600000
+	return float64(result2) + (float64(result1 - result2*600000)/1000000)
+}
+
 
 func parseGoomeDirectionData(data string) int{
 	decimaldata, _ := strconv.ParseInt(data, 16, 64)
 	binarydata := strconv.FormatInt(decimaldata, 2)
 	resultdata, _ := strconv.ParseInt(binarydata[6:], 2, 64)
 	return int(resultdata)
-}
-
-func parseGoomeLatitudeData(lat int64) float64{
-	result1 := lat/3
-	result2 := result1/600000
-	return float64(result2) + (float64(result1 - result2*600000)/1000000)
-}
-
-func parseGoomeLongtitudeData(long int64) float64{
-	result1 := long/3
-	result2 := result1/600000
-	return float64(result2) + (float64(result1 - result2*600000)/1000000)
 }
