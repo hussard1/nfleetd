@@ -5,8 +5,8 @@ const(
  	Timeformat = "20060102150405"
 
 	//device type
-	Goome_u9 = 1
-	Meitrack_mvt380 = 2
+	Goome_u9 = 101
+	Meitrack_mvt380 = 201
 
 	//message type
 	Login_message = 1

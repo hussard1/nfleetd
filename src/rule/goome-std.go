@@ -18,6 +18,18 @@ func (re *GoomeStd) Parse(dataLength int, rawdata []byte, conn net.Conn, IMEIMap
 	msg := new(Message)
 
 	msgList := make([]Message, 0)
+//	var dataLength int
+
+//	for _, data :=range bytes.Split(rawdata[:dataLength], []byte{0x0d, 0x0a}){
+//		data = bytes.TrimPrefix(data, []byte{0x78, 0x78})
+//		dataLength = len(data)
+//		if  dataLength != 0 && data != nil{
+//			if dataLength-1 == int(data[0]){
+//				msg = parseGoomeRawData(data, msg)
+//			}
+//		}
+//	}
+
 
 	var startPoint int = -1
 	var endPoint int
@@ -46,6 +58,8 @@ func (re *GoomeStd) Parse(dataLength int, rawdata []byte, conn net.Conn, IMEIMap
 
 	return msgList
 }
+
+
 
 func responseGoomeData(rawdata []byte, dataLength int, conn net.Conn){
 	responseLoginData := []byte{0x78, 0x78, 0x05, 0x01, 0x00, 0x01, 0xD9, 0xDC, 0x0D, 0x0A}

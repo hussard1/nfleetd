@@ -4,7 +4,7 @@ import (
 	"strings"
 	"strconv"
 	"net"
-	"fmt"
+	"bytes"
 )
 
 type MeitrackStd struct {
@@ -15,20 +15,22 @@ func (re *MeitrackStd) Parse(dataLength int, rawdata []byte, conn net.Conn, IMEI
 	msgList := make([]Message, 0)
 	msg = parseMeitrackData(rawdata[:dataLength], msg)
 	msgList = append(msgList, *msg)
-	fmt.Println(string(rawdata[:dataLength]))
 	return msgList
 }
 
 func parseMeitrackData(raw []byte, msg *Message) *Message{
 	data := strings.Split(string(raw), ",")
+	msg.Devicetype = Meitrack_mvt380
+	msg.Messagetype = Location_message
 	msg.IMEI = data[1]
 //	msg.GPSStatus, _ = strconv.Atoi(data[3])
 	msg.Latitude, _ = strconv.ParseFloat(data[4], 64)
 	msg.Longtitude, _ = strconv.ParseFloat(data[5], 64)
-	msg.Time = data[6]
+	msg.Time = parseMeitrackDatetimeData(data[6])
 //	msg.GPSStatus = data[7]
 	msg.Satellitenum, _ = strconv.ParseInt(data[8], 10, 64)
 	msg.Strength, _ = strconv.Atoi(data[9])
+	msg.Strength = msg.Strength/8
 	msg.Speed, _ = strconv.Atoi(data[10])
 	msg.Direction, _ = strconv.Atoi(data[11])
 //	msg.HorizontalPositionAccuracy, _ = strconv.ParseFloat(data[12], 64)
@@ -42,4 +44,14 @@ func parseMeitrackData(raw []byte, msg *Message) *Message{
 //	msg.CheckCode = data[20][0:3]
 
 	return msg
+}
+
+func parseMeitrackDatetimeData(datetime string) string{
+
+	var buffer bytes.Buffer
+
+	buffer.WriteString("20")
+	buffer.WriteString(datetime)
+
+	return buffer.String()
 }
