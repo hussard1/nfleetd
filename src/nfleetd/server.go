@@ -5,8 +5,9 @@ import (
 	"sync"
 	"rule"
 	"gopkg.in/mgo.v2"
-	"encoding/json"
+//	"encoding/json"
 	"io"
+	"encoding/hex"
 )
 
 const (
@@ -85,6 +86,7 @@ func (server *Server) Bind(worker Worker, device Device, session *mgo.Session) {
 					}
 					return
 				}
+				log.Debug("Receive data : ", hex.EncodeToString(dataSet.rawdata[:dataSet.dataLength]))
 				ch <- *dataSet
 			}
 		}(conn)
@@ -96,8 +98,7 @@ func execute(n int, ch<-chan DataSet, IMEIMap map[net.Conn]string, device Device
 
 	for dataSet := range ch {
 		msgList := re.Parse(dataSet.dataLength, dataSet.rawdata, dataSet.conn, IMEIMap)
-		jsondata, _ := json.Marshal(msgList)
-		log.Debug("Receive data : ", string(jsondata))
+//		jsondata, _ := json.Marshal(msgList)
 //		fmt.Println(string(jsondata))
 		insertDataToMongoDB(msgList, session)
 	}
