@@ -99,7 +99,7 @@ func parseGoomeRawData(rawdata []byte, msg *Message) *Message{
 	}else if len(rawdata) == 38 && rawdata[3] == 0x12{
 		msg.Messagetype = Location_message
 		msg.Time = parseGoomeDatetimeData(rawdata[4:10])
-		msg.Location.Satellitenum, _ = strconv.ParseInt(stringRawdata[21:22], 16, 32)
+		msg.Satellitenum, _ = strconv.ParseInt(stringRawdata[21:22], 16, 32)
 		Latitude, _ := strconv.ParseInt(stringRawdata[22:30], 16, 32)
 		msg.Latitude = parseGoomeLocationData(Latitude)
 		Longtitude, _ := strconv.ParseInt(stringRawdata[30:38], 16, 32)
