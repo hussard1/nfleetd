@@ -129,25 +129,10 @@ func parseGoomeDatetimeData(rawdata []byte) string{
 }
 
 func parseGoomeLocationData(locData int64) float64{
-
 	var result float64
-
-	result1 := float64(locData)/1800000
-	result = float64(int(result1))
-	result2 := (result1 - result)*60
-	result += float64(int(result2))/100
-	result += (result2- float64(int(result2)))*60/10000
-
-	result = float64(int(result*1000000))/1000000
-
+	result = float64(int(float64(locData)/18*10))/1000000
 	return result
 }
-
-//func parseGoomeLocationData(lat int64) float64{
-//	result1 := lat/3
-//	result2 := result1/600000
-//	return float64(result2) + (float64(result1 - result2*600000)/1000000)
-//}
 
 
 func parseGoomeDirectionData(data string) int{
