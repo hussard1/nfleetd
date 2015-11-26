@@ -5,9 +5,7 @@ import (
 	"sync"
 	"rule"
 	"gopkg.in/mgo.v2"
-//	"encoding/json"
 	"io"
-	"encoding/hex"
 )
 
 const (
