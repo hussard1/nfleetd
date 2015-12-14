@@ -25,7 +25,7 @@ func parseMeitrackData(raw []byte, msg *Message) *Message{
 	msg.IMEI = data[1]
 //	msg.GPSStatus, _ = strconv.Atoi(data[3])
 	msg.Latitude, _ = strconv.ParseFloat(data[4], 64)
-	msg.Longtitude, _ = strconv.ParseFloat(data[5], 64)
+	msg.Longitude, _ = strconv.ParseFloat(data[5], 64)
 	msg.Time = parseMeitrackDatetimeData(data[6])
 //	msg.GPSStatus = data[7]
 	msg.Satellitenum, _ = strconv.ParseInt(data[8], 10, 64)
