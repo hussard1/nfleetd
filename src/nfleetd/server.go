@@ -22,7 +22,7 @@ type DataSet struct {
 	conn net.Conn
 }
 
-func (server *Server) Bind(worker Worker, device Device, session *mgo.Session) {
+func (server *Server) Bind(worker Worker, device Device, geofenceList []Geofence, session *mgo.Session, mysqlSession *SQLMapper) {
 	address := fmt.Sprintf("%s:%d", device.address, device.port)
 	log.Info(fmt.Sprintf("Bind name=%s, address=%s", device.name, address))
 
@@ -50,7 +50,7 @@ func (server *Server) Bind(worker Worker, device Device, session *mgo.Session) {
 
 	for i := 0; i < worker.thread; i++ {
 		go func(n int) {
-			execute(n, ch, imeiMap, device, re, session)
+			execute(n, ch, imeiMap, device, re, geofenceList, session, mysqlSession)
 			wg.Done()
 		}(i)
 	}
@@ -92,19 +92,19 @@ func (server *Server) Bind(worker Worker, device Device, session *mgo.Session) {
 	defer close(ch)
 }
 
-func execute(n int, ch<-chan DataSet, IMEIMap map[net.Conn]string, device Device, re rule.RuleEngine, session *mgo.Session) {
-
+func execute(n int, ch<-chan DataSet, IMEIMap map[net.Conn]string, device Device, re rule.RuleEngine, geofenceList []Geofence, session *mgo.Session, mysqlSession *SQLMapper) {
 	for dataSet := range ch {
 		msgList := re.Parse(dataSet.dataLength, dataSet.rawdata, dataSet.conn, IMEIMap)
 		insertDataToMongoDB(msgList, session)
+		CheckInOutGeofence(msgList, geofenceList, mysqlSession)
 	}
 }
 
 func insertDataToMongoDB(msgList []rule.Message, session *mgo.Session) {
 	go func(){
 		if msgList != nil {
-			for i := 0; i < len(msgList); i++ {
-				err := session.DB("nfleet").C("gpsdata").Insert(msgList[i])
+			for _, msg := range msgList{
+				err := session.DB("nfleet").C("gpsdata").Insert(msg)
 				if err != nil {
 					log.Error("Cannot insert to Mongodb : ", err)
 				}

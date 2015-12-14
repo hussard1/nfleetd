@@ -16,18 +16,31 @@ func commandLine() (configfile *string, logfile *string, loglevel *string) {
 	return
 }
 
-func bootup(worker *Worker, devices []Device, collection *mgo.Session) {
+func bootup(worker *Worker, devices []Device, geofenceList []Geofence, collection *mgo.Session, mysqlSession *SQLMapper) {
 	log.Info("Starting nfleetd server...")
 
 	server := new(Server)
 
 	for _, device := range devices {
 		if device.enabled == true {
-			go func(w Worker, d Device, s *mgo.Session) {
-				server.Bind(w, d, s)
-			}(*worker, device, collection)
+			go func(w Worker, d Device, g []Geofence, s *mgo.Session, ms *SQLMapper){
+				server.Bind(w, d, g, s, ms)
+			}(*worker, device, geofenceList, collection, mysqlSession)
 		}
 	}
+}
+
+func InitGeofence(mysqlSession *SQLMapper) ([]Geofence){
+
+	// Get Geofence List
+	geofenceList := mysqlSession.GetGeofenceFromDatabase()
+
+	// Get Inoutstate
+	mysqlSession.GetGeofenceState(geofenceList)
+
+
+	// initialize Inoutstate
+	return geofenceList
 }
 
 func main() {
@@ -47,11 +60,17 @@ func main() {
 	// Load configuration file
 	conf := new(Configuration)
 	conf.Load(configfile)
-
 	// Initialize mongoDB
-	session := InitMongoDB();
+	session := InitMongoDB()
 
-	bootup(conf.getWorker(), conf.GetDevices(), session)
+	// Initialize mysql
+	mysqlSession := GetSQLMapper()
+
+	// Initialize geofence
+	geofenceList := InitGeofence(mysqlSession)
+
+
+	bootup(conf.getWorker(), conf.GetDevices(), geofenceList, session, mysqlSession)
 
 	for _ = range done {
 		select {

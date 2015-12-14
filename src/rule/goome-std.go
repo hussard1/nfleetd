@@ -18,8 +18,8 @@ func (re *GoomeStd) Parse(dataLength int, rawdata []byte, conn net.Conn, IMEIMap
 	msg := new(Message)
 
 	msgList := make([]Message, 0)
-//	var dataLength int
 
+//	var dataLength int
 //	for _, data :=range bytes.Split(rawdata[:dataLength], []byte{0x0d, 0x0a}){
 //		data = bytes.TrimPrefix(data, []byte{0x78, 0x78})
 //		dataLength = len(data)
@@ -103,7 +103,7 @@ func parseGoomeRawData(rawdata []byte, msg *Message) *Message{
 		Latitude, _ := strconv.ParseInt(stringRawdata[22:30], 16, 32)
 		msg.Latitude = parseGoomeLocationData(Latitude)
 		Longtitude, _ := strconv.ParseInt(stringRawdata[30:38], 16, 32)
-		msg.Longtitude = parseGoomeLocationData(Longtitude)
+		msg.Longitude = parseGoomeLocationData(Longtitude)
 		msg.Speed = int(rawdata[20])
 		msg.Direction = parseGoomeDirectionData(stringRawdata[42:46])
 	}else if len(rawdata) == 42{
