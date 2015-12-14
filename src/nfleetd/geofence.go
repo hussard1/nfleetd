@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"bytes"
 	"rule"
-	"fmt"
 )
 
 //func checkInOutGeofence(geofenceList []Geofence, msgList []rule.Message) []Geofence{
@@ -38,26 +37,24 @@ func Checkpoint(geofenceList []Geofence, msgList []rule.Message) []Geofence{
 					if CheckInoutState(geofence, msg.IMEI){
 						resultList = append(resultList, geofence)
 						geofence.state[msg.IMEI] = 2
-						fmt.Println("1")
-					}else{
-						fmt.Println("2")
 					}
 				}else{
-					updateToOutState(geofence,  msg.IMEI)
-					fmt.Println("3")
+					if geofence.state[msg.IMEI] ==2{
+						geofence.state[msg.IMEI] = 1
+						resultList = append(resultList, geofence)
+					}
 				}
 			}else if geofence.shape == 2{
 				if PointsWithinPolygon(geofence, point) {
 					if CheckInoutState(geofence, msg.IMEI){
 						resultList = append(resultList, geofence)
 						geofence.state[msg.IMEI] = 2
-						fmt.Println("4")
-					}else{
-						fmt.Println("5")
 					}
 				}else{
-					updateToOutState(geofence,  msg.IMEI)
-					fmt.Println("6")
+					if geofence.state[msg.IMEI] ==2{
+						geofence.state[msg.IMEI] = 1
+						resultList = append(resultList, geofence)
+					}
 				}
 			}
 		}
@@ -72,27 +69,13 @@ func CheckInoutState(geofence Geofence, imei string) bool{
 	flag, _ := geofence.state[imei]
 
 	if flag == 1 || flag == 0{
-		fmt.Println("7")
 		 return true
 	}else if flag ==2 {
-		fmt.Println("8")
 		return false
 	}else{
-		fmt.Println("9")
 		return false
 	}
 }
-
-func updateToOutState(geofence Geofence,  imei string){
-	flag := geofence.state[imei]
-
-	if flag == 2{
-		fmt.Println("10")
-		flag = 1
-	}
-	fmt.Println("11")
-}
-
 
 
 func PointsWithinCircle(geofence Geofence, point *Point) bool{
