@@ -29,9 +29,39 @@ func (s *SQLMapper) SqlDbConn() *sql.DB {
 	return s.sqlConn
 }
 
+func (s *SQLMapper) GetDeviceFromDatabase() map[string]int{
+
+	query := fmt.Sprintf("SELECT imei FROM %v", s.conf.devicetable)
+
+	rows, err := s.sqlConn.Query(query)
+	if err != nil{
+		panic(err)
+	}
+
+	deviceList := make(map[string]int)
+
+	var imei string
+
+	defer rows.Close()
+	for rows.Next() {
+		err := rows.Scan(&imei)
+		if err != nil {
+			log.Fatal(err)
+		}
+		deviceList[imei] = 0;
+	}
+	err = rows.Err()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return deviceList
+}
+
+
 func (s *SQLMapper) GetGeofenceFromDatabase() []Geofence{
 
-	query := fmt.Sprintf("SELECT id, shape, vertices, radius FROM %v where active=1", s.conf.table)
+	query := fmt.Sprintf("SELECT id, shape, vertices, radius FROM %v where active=1", s.conf.geofencetable)
 
 	rows, err := s.sqlConn.Query(query)
 	if err != nil{
@@ -60,7 +90,7 @@ func (s *SQLMapper) GetGeofenceFromDatabase() []Geofence{
 
 func (s *SQLMapper) InsertResult(resultList []Geofence) error{
 
-	query := fmt.Sprintf("INSERT INTO %s(geofence_id, imei, time, flag) VALUES(?, ?, now(), ?)", s.conf.insertTable)
+	query := fmt.Sprintf("INSERT INTO %s(geofence_id, imei, time, flag) VALUES(?, ?, now(), ?)", s.conf.inouttable)
 
 	stmt, err := s.sqlConn.Prepare(query)
 	if err != nil{
@@ -81,7 +111,7 @@ func (s *SQLMapper) InsertResult(resultList []Geofence) error{
 
 func (s *SQLMapper) GetGeofenceState(geofenceList []Geofence){
 
-	query := fmt.Sprintf("SELECT imei, flag FROM %v  where geofence_id = ? group by geofence_id, imei order by time desc;", s.conf.insertTable)
+	query := fmt.Sprintf("SELECT imei, flag FROM %v  where geofence_id = ? group by geofence_id, imei order by time desc;", s.conf.inouttable)
 
 	stmt, err := s.sqlConn.Prepare(query)
 	if err != nil{
@@ -113,6 +143,20 @@ func (s *SQLMapper) GetGeofenceState(geofenceList []Geofence){
 		if err != nil {
 			log.Fatal(err)
 		}
+	}
+}
+
+func (s *SQLMapper) InsertDeivceInfoToMysql(imei string){
+	query := fmt.Sprintf("INSERT INTO %s(imei) VALUES(?)", s.conf.devicetable)
+
+	stmt, err := s.sqlConn.Prepare(query)
+	if err != nil{
+		log.Fatal(err)
+	}
+
+	_, err = stmt.Exec(imei)
+	if err != nil{
+		log.Fatal(err)
 	}
 }
 

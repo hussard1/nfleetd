@@ -22,7 +22,7 @@ type DataSet struct {
 	conn net.Conn
 }
 
-func (server *Server) Bind(worker Worker, device Device, geofenceList []Geofence, session *mgo.Session, mysqlSession *SQLMapper) {
+func (server *Server) Bind(worker Worker, device Device, deviceList map[string]int, geofenceList []Geofence, session *mgo.Session, mysqlSession *SQLMapper) {
 	address := fmt.Sprintf("%s:%d", device.address, device.port)
 	log.Info(fmt.Sprintf("Bind name=%s, address=%s", device.name, address))
 
@@ -50,7 +50,7 @@ func (server *Server) Bind(worker Worker, device Device, geofenceList []Geofence
 
 	for i := 0; i < worker.thread; i++ {
 		go func(n int) {
-			execute(n, ch, imeiMap, device, re, geofenceList, session, mysqlSession)
+			execute(n, ch, imeiMap, device, re, deviceList, geofenceList, session, mysqlSession)
 			wg.Done()
 		}(i)
 	}
@@ -92,15 +92,27 @@ func (server *Server) Bind(worker Worker, device Device, geofenceList []Geofence
 	defer close(ch)
 }
 
-func execute(n int, ch<-chan DataSet, IMEIMap map[net.Conn]string, device Device, re rule.RuleEngine, geofenceList []Geofence, session *mgo.Session, mysqlSession *SQLMapper) {
+func execute(n int, ch<-chan DataSet, IMEIMap map[net.Conn]string, device Device, re rule.RuleEngine, deviceList map[string]int, geofenceList []Geofence, session *mgo.Session, mysqlSession *SQLMapper) {
 	for dataSet := range ch {
 		msgList := re.Parse(dataSet.dataLength, dataSet.rawdata, dataSet.conn, IMEIMap)
-		insertDataToMongoDB(msgList, session)
+		InsertDataToMongoDB(msgList, session)
+		InsertDeviceInfo(msgList, deviceList, mysqlSession)
 		CheckInOutGeofence(msgList, geofenceList, mysqlSession)
 	}
 }
 
-func insertDataToMongoDB(msgList []rule.Message, session *mgo.Session) {
+func InsertDeviceInfo(msgList []rule.Message, deviceList map[string]int, mysqlSession *SQLMapper){
+	if msgList != nil{
+		for _, msg := range msgList{
+			if _, ok := deviceList[msg.IMEI]; !ok {
+				mysqlSession.InsertDeivceInfoToMysql(msg.IMEI);
+				deviceList[msg.IMEI] = 0
+			}
+		}
+	}
+}
+
+func InsertDataToMongoDB(msgList []rule.Message, session *mgo.Session) {
 	go func(){
 		if msgList != nil {
 			for _, msg := range msgList{

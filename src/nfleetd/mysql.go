@@ -9,22 +9,24 @@ import (
 type SQLConf struct {
 	driver  string
 	openStr string
-	table   string
-	insertTable string
+	devicetable string
+	geofencetable   string
+	inouttable string
 }
 
 const (
 	driver = "mysql"
 	openStr = "nfleet:dpsvmflxm@tcp(www.motrexlab.net:3306)/nfleet"
-	table = "geofence"
-	insertTable = "inout_geofence"
+	devicetable = "device"
+	geofencetable = "geofence"
+	inouttable = "inout_geofence"
 	latCol = "lat"
 	lngCol = "lng"
 )
 
 // Returns a SQLConf based on the $DB environment variable
 func GetSqlConf() *SQLConf {
-	return &SQLConf{driver: driver, openStr: openStr, table: table, insertTable : insertTable}
+	return &SQLConf{driver: driver, openStr: openStr, devicetable: devicetable, geofencetable: geofencetable, inouttable : inouttable}
 }
 
 func GetSQLMapper() (*SQLMapper) {
