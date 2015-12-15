@@ -23,7 +23,7 @@ type Message struct {
 type Location struct{
 	Satellitenum int64 `json:"satellitenum"`
 	Latitude float64 `json:"latitude"`
-	Longitude float64 `json:"longtitude"`
+	Longitude float64 `json:"longitude"`
 	Speed int `json:"speed"`
 	Direction int `json:"direction"`
 }
