@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"bytes"
 	"rule"
+	"fmt"
 )
 
 //func checkInOutGeofence(geofenceList []Geofence, msgList []rule.Message) []Geofence{
@@ -19,7 +20,7 @@ func CheckInOutGeofence(msgList []rule.Message, geofenceList []Geofence, mysqlSe
 
 	resultList := Checkpoint(geofenceList, msgList)
 
-	if resultList != nil{
+	if resultList != nil && len(resultList) != 0{
 		_ = mysqlSession.InsertResult(resultList)
 		//update database
 	}
@@ -39,7 +40,7 @@ func Checkpoint(geofenceList []Geofence, msgList []rule.Message) []Geofence{
 						geofence.state[msg.IMEI] = 2
 					}
 				}else{
-					if geofence.state[msg.IMEI] ==2{
+					if geofence.state[msg.IMEI] == 2{
 						geofence.state[msg.IMEI] = 1
 						resultList = append(resultList, geofence)
 					}
