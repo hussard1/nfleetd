@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"bytes"
 	"rule"
-	"fmt"
 )
 
 //func checkInOutGeofence(geofenceList []Geofence, msgList []rule.Message) []Geofence{
