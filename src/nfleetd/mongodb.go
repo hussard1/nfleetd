@@ -7,6 +7,7 @@ import (
 
 const (
 	MongoDBHosts = "52.77.223.167:27017"
+//	MongoDBHosts = "www.motrexlab.net:27017"
 	AuthDatabase = "nfleet"
 //	AuthUserName = "guest"
 //	AuthPassword = "welcome"

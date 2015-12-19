@@ -16,6 +16,7 @@ type SQLConf struct {
 
 const (
 	driver = "mysql"
+//	openStr = "nfleet:dpsvmflxm@tcp(www.motrexlab.net:3306)/nfleet"
 	openStr = "nfleet:dpsvmflxm@tcp(nfleet.c3li2b1mmcbj.ap-southeast-1.rds.amazonaws.com:3306)/nfleet"
 	devicetable = "device"
 	geofencetable = "geofence"

@@ -32,7 +32,7 @@ func bootup(worker *Worker, devices []Device, deviceList map[string]int, geofenc
 
 func InitDeviceList(mysqlSession *SQLMapper) map[string]int{
 
-	deviceList := mysqlSession.GetDeviceFromDatabase();
+	deviceList := mysqlSession.GetDeviceListFromDatabase();
 
 	return deviceList
 }
@@ -40,13 +40,11 @@ func InitDeviceList(mysqlSession *SQLMapper) map[string]int{
 func InitGeofence(mysqlSession *SQLMapper) ([]Geofence){
 
 	// Get Geofence List
-	geofenceList := mysqlSession.GetGeofenceFromDatabase()
+	geofenceList := mysqlSession.GetGeofenceListFromDatabase()
 
 	// Get Inoutstate
 	mysqlSession.GetGeofenceState(geofenceList)
 
-
-	// initialize Inoutstate
 	return geofenceList
 }
 

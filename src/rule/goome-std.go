@@ -19,13 +19,17 @@ func (re *GoomeStd) Parse(dataLength int, rawdata []byte, conn net.Conn, IMEIMap
 
 	msgList := make([]Message, 0)
 
-//	var dataLength int
-//	for _, data :=range bytes.Split(rawdata[:dataLength], []byte{0x0d, 0x0a}){
-//		data = bytes.TrimPrefix(data, []byte{0x78, 0x78})
-//		dataLength = len(data)
-//		if  dataLength != 0 && data != nil{
-//			if dataLength-1 == int(data[0]){
+//	for _, data := range bytes.Split(rawdata[:dataLength], []byte{0x0d, 0x0a}){
+//		if data != nil && len(data) != 0{
+//			data = bytes.TrimPrefix(data, []byte{0x78, 0x78})
+//			if (len(data)-1) == int(data[0]){
 //				msg = parseGoomeRawData(data, msg)
+//				if value, ok := IMEIMap[conn]; ok {
+//					msg.IMEI = value
+//				}else{
+//					IMEIMap[conn] = msg.IMEI
+//				}
+//				msgList = append(msgList, *msg)
 //			}
 //		}
 //	}
@@ -85,8 +89,8 @@ func parseGoomeRawData(rawdata []byte, msg *Message) *Message{
 	if len(rawdata) == 15 && rawdata[3] == 0x13{
 		msg.Messagetype = Status_message
 		status := strconv.FormatInt(int64(rawdata[4]), 2)
-		msg.Acc, _ = strconv.Atoi(status[0:1])
-		msg.Power, _ = strconv.Atoi(status[1:2])
+		msg.Acc, _ = strconv.Atoi(status[5:6])
+		msg.Power, _ = strconv.Atoi(status[4:5])
 		msg.Voltage = int(rawdata[5])
 		msg.Strength = int(rawdata[6])
 		msg.Time = datetime
@@ -104,8 +108,8 @@ func parseGoomeRawData(rawdata []byte, msg *Message) *Message{
 		msg.Latitude = parseGoomeLocationData(Latitude)
 		Longtitude, _ := strconv.ParseInt(stringRawdata[30:38], 16, 32)
 		msg.Longitude = parseGoomeLocationData(Longtitude)
-		msg.Speed = int(rawdata[20])
-		msg.Direction = parseGoomeDirectionData(stringRawdata[42:46])
+		msg.Speed = int(rawdata[19])
+		msg.Direction = parseGoomeDirectionData(stringRawdata[40:44])
 	}else if len(rawdata) == 42{
 
 	}

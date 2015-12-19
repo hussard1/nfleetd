@@ -29,7 +29,7 @@ func (s *SQLMapper) SqlDbConn() *sql.DB {
 	return s.sqlConn
 }
 
-func (s *SQLMapper) GetDeviceFromDatabase() map[string]int{
+func (s *SQLMapper) GetDeviceListFromDatabase() map[string]int{
 
 	query := fmt.Sprintf("SELECT imei FROM %v", s.conf.devicetable)
 
@@ -59,7 +59,7 @@ func (s *SQLMapper) GetDeviceFromDatabase() map[string]int{
 }
 
 
-func (s *SQLMapper) GetGeofenceFromDatabase() []Geofence{
+func (s *SQLMapper) GetGeofenceListFromDatabase() []Geofence{
 
 	query := fmt.Sprintf("SELECT id, shape, vertices, radius FROM %v where active=1", s.conf.geofencetable)
 
