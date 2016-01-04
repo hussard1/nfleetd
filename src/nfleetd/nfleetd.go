@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"runtime"
-	"gopkg.in/mgo.v2"
 )
 
 func commandLine() (configfile *string, logfile *string, loglevel *string) {
@@ -16,15 +15,15 @@ func commandLine() (configfile *string, logfile *string, loglevel *string) {
 	return
 }
 
-func bootup(worker *Worker, devices []Device, deviceList map[string]int, geofenceList []Geofence, mongoSesson *mgo.Session, mysqlSession *SQLMapper) {
+func bootup(worker *Worker, devices []Device, deviceList map[string]int, geofenceList []Geofence, mongoSesson *MongoSession, mysqlSession *SQLMapper) {
 	log.Info("Starting nfleetd server...")
 
 	server := new(Server)
 
 	for _, device := range devices {
 		if device.enabled == true {
-			go func(w Worker, d Device, dl map[string]int,  g []Geofence, s *mgo.Session, ms *SQLMapper){
-				server.Bind(w, d, dl, g, s, ms)
+			go func(w Worker, d Device, dl map[string]int,  g []Geofence, ms *MongoSession, s *SQLMapper){
+				server.Bind(w, d, dl, g, ms, s)
 			}(*worker, device, deviceList, geofenceList, mongoSesson, mysqlSession)
 		}
 	}

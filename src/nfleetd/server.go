@@ -4,7 +4,6 @@ import (
 	"net"
 	"sync"
 	"rule"
-	"gopkg.in/mgo.v2"
 	"io"
 )
 
@@ -22,7 +21,7 @@ type DataSet struct {
 	conn net.Conn
 }
 
-func (server *Server) Bind(worker Worker, device Device, deviceList map[string]int, geofenceList []Geofence, session *mgo.Session, mysqlSession *SQLMapper) {
+func (server *Server) Bind(worker Worker, device Device, deviceList map[string]int, geofenceList []Geofence, mongoSession *MongoSession, mysqlSession *SQLMapper) {
 	address := fmt.Sprintf("%s:%d", device.address, device.port)
 	log.Info(fmt.Sprintf("Bind name=%s, address=%s", device.name, address))
 
@@ -50,7 +49,7 @@ func (server *Server) Bind(worker Worker, device Device, deviceList map[string]i
 
 	for i := 0; i < worker.thread; i++ {
 		go func(n int) {
-			execute(ch, imeiMap, re, deviceList, geofenceList, session, mysqlSession)
+			execute(ch, imeiMap, re, deviceList, geofenceList, mongoSession, mysqlSession)
 			wg.Done()
 		}(i)
 	}
@@ -92,10 +91,10 @@ func (server *Server) Bind(worker Worker, device Device, deviceList map[string]i
 	defer close(ch)
 }
 
-func execute(ch<-chan DataSet, IMEIMap map[net.Conn]string, re rule.RuleEngine, deviceList map[string]int, geofenceList []Geofence, session *mgo.Session, mysqlSession *SQLMapper) {
+func execute(ch<-chan DataSet, IMEIMap map[net.Conn]string, re rule.RuleEngine, deviceList map[string]int, geofenceList []Geofence, mongoSession *MongoSession, mysqlSession *SQLMapper) {
 	for dataSet := range ch {
 		msgList := re.Parse(dataSet.dataLength, dataSet.rawdata, dataSet.conn, IMEIMap)
-		InsertMessageToMongoDB(msgList, session)
+		mongoSession.InsertMessageToMongoDB(msgList)
 		InsertDeviceInfo(msgList, deviceList, mysqlSession)
 		CheckInOutGeofence(msgList, geofenceList, mysqlSession)
 	}
@@ -110,17 +109,4 @@ func InsertDeviceInfo(msgList []rule.Message, deviceList map[string]int, mysqlSe
 			}
 		}
 	}
-}
-
-func InsertMessageToMongoDB(msgList []rule.Message, session *mgo.Session) {
-	go func(){
-		if msgList != nil {
-			for _, msg := range msgList{
-				err := session.DB("nfleet").C("gpsdata").Insert(msg)
-				if err != nil {
-					log.Error("Cannot insert to Mongodb : ", err)
-				}
-			}
-		}
-	}()
 }

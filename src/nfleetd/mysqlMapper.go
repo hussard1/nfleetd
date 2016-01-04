@@ -11,19 +11,6 @@ type SQLMapper struct {
 	sqlConn *sql.DB
 }
 
-type Geofence struct {
-	id       int
-	shape    int
-	vertices string
-	radius   sql.NullFloat64
-	state 	 map[string]int
-}
-//
-//type InoutList struct{
-//	IMEI     string
-//	flag     int
-//}
-
 // Returns a pointer to the SQLMapper's SQL Database Connection.
 func (s *SQLMapper) SqlDbConn() *sql.DB {
 	return s.sqlConn
