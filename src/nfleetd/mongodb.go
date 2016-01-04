@@ -14,22 +14,31 @@ const (
 //	TestDatabase = "goinggo"
 )
 
+type MongoSession struct{
+	session *mgo.Session
+}
 
-func InitMongoDB() *mgo.Session{
+func InitMongoDB() *MongoSession{
+	m := new(MongoSession)
+	m.session = GetMongoConn();
+	return m
+}
+
+func GetMongoConn() *mgo.Session{
 	// We need this object to establish a session to our MongoDB.
 	mongoDBDialInfo := &mgo.DialInfo{
-		Addrs:    []string{MongoDBHosts},
-		Timeout:  60 * time.Second,
-		Database: AuthDatabase,
-		//		Username: AuthUserName,
-		//		Password: AuthPassword,
+	Addrs:    []string{MongoDBHosts},
+	Timeout:  60 * time.Second,
+	Database: AuthDatabase,
+	//		Username: AuthUserName,
+	//		Password: AuthPassword,
 	}
 
 	// Create a session which maintains a pool of socket connections
 	// to our MongoDB.
 	mongoSession, err := mgo.DialWithInfo(mongoDBDialInfo)
 	if err != nil {
-		log.Panic("CreateSession: %s\n", err)
+	log.Panic("CreateSession: %s\n", err)
 	}
 
 	// Reads may not be entirely up-to-date, but they will always see the
@@ -39,5 +48,5 @@ func InitMongoDB() *mgo.Session{
 	// http://godoc.org/labix.org/v2/mgo#Session.SetMode
 	mongoSession.SetMode(mgo.Monotonic, true)
 
-	return mongoSession
+	return mongoSession;
 }

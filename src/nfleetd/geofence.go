@@ -4,21 +4,30 @@ import (
 	"encoding/json"
 	"bytes"
 	"rule"
+	"database/sql"
 )
+
+
+type Geofence struct {
+	id       int
+	shape    int
+	vertices string
+	radius   sql.NullFloat64
+	state 	 map[string]int
+}
+
 
 //func checkInOutGeofence(geofenceList []Geofence, msgList []rule.Message) []Geofence{
 func CheckInOutGeofence(msgList []rule.Message, geofenceList []Geofence, mysqlSession *SQLMapper){
-
 
 //	var IMEI string
 //	for _, msg := range msgList {
 //		IMEI = msg.IMEI
 //	}
 	//select geofence state
-//	mysqlSession.GetGeofenceState(IMEI, geofenceAndStmt)
+//	mysqlSession.GetGeofenceState(geofenceList)
 
 	resultList := Checkpoint(geofenceList, msgList)
-
 	if resultList != nil && len(resultList) != 0{
 		_ = mysqlSession.InsertResult(resultList)
 		//update database
