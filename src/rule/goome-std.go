@@ -15,40 +15,36 @@ type GoomeStd struct {
 
 func (re *GoomeStd) Parse(rawdataLength int, rawdata []byte, conn net.Conn, IMEIMap map[net.Conn]string) []Message{
 
-//	msg := new(Message)
+	msg := new(Message)
 	msgList := make([]Message, 0)
+
+	var dataLength int;
 
 	for _, data := range bytes.SplitAfter(rawdata[:rawdataLength], []byte{0x0d, 0x0a}){
 		if(bytes.HasPrefix(data, []byte{0x78, 0x78})){
+			dataLength = len(data)
 			/*  check packageLength */
-			if(int(data[2]) == len(data)-5){
+			if(int(data[2]) == dataLength-5){
 				/* check CRC */
-				i := util.Crc16(data[2:len(data)-4])
-				var h, l uint8 = uint8(i>>8), uint8(i&0xff)
-				if h == uint8(data[len(data)-4]) && l == uint8(data[len(data)-3]) {
-					fmt.Println("111111111111")
+				if checkSum(data, dataLength){
+					msg = parseGoomeRawData(data, msg)
+					/* save the imei to map from login message type.
+					   because location message type has not imei.
+					 */
+					if value, ok := IMEIMap[conn]; ok {
+						msg.IMEI = value
+					}else{
+						IMEIMap[conn] = msg.IMEI
+					}
+					msgList = append(msgList, *msg)
 				}
 			}
 		}
-//		if len(data) != 0{
-//			data = bytes.TrimPrefix(data, []byte{0x78, 0x78})
-//			if (len(data)-1) == int(data[0]){
-//				msg = parseGoomeRawData(data, msg)
-//				if value, ok := IMEIMap[conn]; ok {
-//					msg.IMEI = value
-//				}else{
-//					IMEIMap[conn] = msg.IMEI
-//				}
-//				msgList = append(msgList, *msg)
-//			}
-//		}
 	}
-
-
 
 //	var startPoint int = -1
 //	var endPoint int
-//
+
 //	for i := 0; i < dataLength; i++{
 //		if rawdata[i] == 0x78 && rawdata[i+1] == 0x78{
 //			startPoint = i
@@ -65,15 +61,24 @@ func (re *GoomeStd) Parse(rawdataLength int, rawdata []byte, conn net.Conn, IMEI
 //			}
 //		}
 //	}
-
+//
 //	if (dataLength == 15 && rawdata[3] == 0x13) ||
 //		(dataLength == 18 && rawdata[3] == 0x01) {
 //		responseGoomeData(rawdata, dataLength, conn)
 //	}
-
-	return msgList
+//
+//	return msgList
 }
 
+func checkSum(data []byte, dataLength int) bool{
+	i := util.Crc16(data[2:dataLength-4])
+	var h, l uint8 = uint8(i>>8), uint8(i&0xff)
+	if h == uint8(data[dataLength-4]) && l == uint8(data[dataLength-3]) {
+		return true
+	}else{
+		return false
+	}
+}
 
 
 func responseGoomeData(rawdata []byte, dataLength int, conn net.Conn){
