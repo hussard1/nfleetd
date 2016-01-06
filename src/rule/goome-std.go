@@ -13,56 +13,50 @@ import (
 type GoomeStd struct {
 }
 
-func (re *GoomeStd) Parse(dataLength int, rawdata []byte, conn net.Conn, IMEIMap map[net.Conn]string) []Message{
+func (re *GoomeStd) Parse(rawdataLength int, rawdata []byte, conn net.Conn, IMEIMap map[net.Conn]string) []Message{
 
 	msg := new(Message)
-
 	msgList := make([]Message, 0)
 
-//	for _, data := range bytes.Split(rawdata[:dataLength], []byte{0x0d, 0x0a}){
-//		if data != nil && len(data) != 0{
-//			data = bytes.TrimPrefix(data, []byte{0x78, 0x78})
-//			if (len(data)-1) == int(data[0]){
-//				msg = parseGoomeRawData(data, msg)
-//				if value, ok := IMEIMap[conn]; ok {
-//					msg.IMEI = value
-//				}else{
-//					IMEIMap[conn] = msg.IMEI
-//				}
-//				msgList = append(msgList, *msg)
-//			}
-//		}
-//	}
-
-
-	var startPoint int = -1
-	var endPoint int
-
-	for i := 0; i < dataLength; i++{
-		if rawdata[i] == 0x78 && rawdata[i+1] == 0x78{
-			startPoint = i
-		}else if rawdata[i] == 0x0D && rawdata[i+1] == 0x0A{
-			endPoint = i+2
-			if startPoint != -1 && (endPoint - startPoint) > 14 && (endPoint - startPoint) < 45{
-				msg = parseGoomeRawData(rawdata[startPoint:endPoint], msg)
-				if value, ok := IMEIMap[conn]; ok {
-					msg.IMEI = value
-				}else{
-					IMEIMap[conn] = msg.IMEI
+	for _, data := range bytes.SplitAfter(rawdata[:rawdataLength], []byte{0x0d, 0x0a}){
+		if(bytes.HasPrefix(data, []byte{0x78, 0x78})){
+			dataLength := len(data)
+			/*  check packageLength */
+			if(int(data[2]) == dataLength-5){
+				/* check CRC */
+				if checkSum(data, dataLength){
+					msg = parseGoomeRawData(data, msg)
+					/* save the imei to map from login message type.
+					   because location message type has not imei.
+					 */
+					if value, ok := IMEIMap[conn]; ok {
+						msg.IMEI = value
+					}else{
+						IMEIMap[conn] = msg.IMEI
+					}
+					msgList = append(msgList, *msg)
 				}
-				msgList = append(msgList, *msg)
 			}
 		}
 	}
 
-	if (dataLength == 15 && rawdata[3] == 0x13) ||
-		(dataLength == 18 && rawdata[3] == 0x01) {
-		responseGoomeData(rawdata, dataLength, conn)
+	if (rawdataLength == 15 && rawdata[3] == 0x13) ||
+		(rawdataLength == 18 && rawdata[3] == 0x01) {
+		responseGoomeData(rawdata, rawdataLength, conn)
 	}
 
 	return msgList
 }
 
+func checkSum(data []byte, dataLength int) bool{
+	i := util.Crc16(data[2:dataLength-4])
+	var h, l uint8 = uint8(i>>8), uint8(i&0xff)
+	if h == uint8(data[dataLength-4]) && l == uint8(data[dataLength-3]) {
+		return true
+	}else{
+		return false
+	}
+}
 
 
 func responseGoomeData(rawdata []byte, dataLength int, conn net.Conn){
@@ -71,8 +65,6 @@ func responseGoomeData(rawdata []byte, dataLength int, conn net.Conn){
 	responseLoginData[3] = rawdata[3]
 	responseLoginData[4] = rawdata[dataLength-6]
 	responseLoginData[5] = rawdata[dataLength-5]
-	responseLoginData[6] = byte(util.Crc16(rawdata[dataLength-4:dataLength-3]))
-	responseLoginData[7] = byte(util.Crc16(rawdata[dataLength-3:dataLength-2]))
 
 	_, err := conn.Write(responseLoginData)
 	if err != nil{

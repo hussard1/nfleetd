@@ -1,6 +1,5 @@
 package util
 
-
 var crc16tab = [256]uint16{
 	0X0000, 0X1189, 0X2312, 0X329B, 0X4624, 0X57AD, 0X6536, 0X74BF,
 	0X8C48, 0X9DC1, 0XAF5A, 0XBED3, 0XCA6C, 0XDBE5, 0XE97E, 0XF8F7,
@@ -36,11 +35,12 @@ var crc16tab = [256]uint16{
 	0X7BC7, 0X6A4E, 0X58D5, 0X495C, 0X3DE3, 0X2C6A, 0X1EF1, 0X0F78,
 };
 
-func Crc16(bs []byte) (crc uint16) {
-	l := len(bs)
-	for i := 0; i < l; i++ {
-		crc = ((crc << 8) & 0xff00) ^ crc16tab[((crc>>8)&0xff)^uint16(bs[i])]
-	}
+func Crc16(bs []byte) (uint16) {
 
-	return
+	var crc uint16 = 0xffff
+
+	for _, v := range bs{
+		crc = (crc>>8) ^ crc16tab[uint8(crc^uint16(v))]
+	}
+	return ^crc
 }
