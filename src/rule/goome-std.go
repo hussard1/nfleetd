@@ -18,11 +18,9 @@ func (re *GoomeStd) Parse(rawdataLength int, rawdata []byte, conn net.Conn, IMEI
 	msg := new(Message)
 	msgList := make([]Message, 0)
 
-	var dataLength int;
-
 	for _, data := range bytes.SplitAfter(rawdata[:rawdataLength], []byte{0x0d, 0x0a}){
 		if(bytes.HasPrefix(data, []byte{0x78, 0x78})){
-			dataLength = len(data)
+			dataLength := len(data)
 			/*  check packageLength */
 			if(int(data[2]) == dataLength-5){
 				/* check CRC */
@@ -42,32 +40,12 @@ func (re *GoomeStd) Parse(rawdataLength int, rawdata []byte, conn net.Conn, IMEI
 		}
 	}
 
-//	var startPoint int = -1
-//	var endPoint int
+	if (rawdataLength == 15 && rawdata[3] == 0x13) ||
+		(rawdataLength == 18 && rawdata[3] == 0x01) {
+		responseGoomeData(rawdata, rawdataLength, conn)
+	}
 
-//	for i := 0; i < dataLength; i++{
-//		if rawdata[i] == 0x78 && rawdata[i+1] == 0x78{
-//			startPoint = i
-//		}else if rawdata[i] == 0x0D && rawdata[i+1] == 0x0A{
-//			endPoint = i+2
-//			if startPoint != -1 && (endPoint - startPoint) > 14 && (endPoint - startPoint) < 45{
-//				msg = parseGoomeRawData(rawdata[startPoint:endPoint], msg)
-//				if value, ok := IMEIMap[conn]; ok {
-//					msg.IMEI = value
-//				}else{
-//					IMEIMap[conn] = msg.IMEI
-//				}
-//				msgList = append(msgList, *msg)
-//			}
-//		}
-//	}
-//
-//	if (dataLength == 15 && rawdata[3] == 0x13) ||
-//		(dataLength == 18 && rawdata[3] == 0x01) {
-//		responseGoomeData(rawdata, dataLength, conn)
-//	}
-//
-//	return msgList
+	return msgList
 }
 
 func checkSum(data []byte, dataLength int) bool{
@@ -87,8 +65,6 @@ func responseGoomeData(rawdata []byte, dataLength int, conn net.Conn){
 	responseLoginData[3] = rawdata[3]
 	responseLoginData[4] = rawdata[dataLength-6]
 	responseLoginData[5] = rawdata[dataLength-5]
-	responseLoginData[6] = byte(util.Crc16(rawdata[dataLength-4:dataLength-3]))
-	responseLoginData[7] = byte(util.Crc16(rawdata[dataLength-3:dataLength-2]))
 
 	_, err := conn.Write(responseLoginData)
 	if err != nil{
